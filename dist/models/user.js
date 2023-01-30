@@ -45,6 +45,26 @@ const UserSchema = new Schema({
         type: Boolean,
         default: false,
     },
+    description: {
+        type: String,
+        max: 50,
+        default: ""
+    },
+    city: {
+        type: String,
+        max: 50,
+        default: ""
+    },
+    from: {
+        type: String,
+        max: 50,
+        default: ""
+    },
+    relationship: {
+        type: Number,
+        enum: [1, 2, 3],
+        default: 1
+    }
 }, { timestamps: true });
 exports.default = model("Users", UserSchema);
 //# sourceMappingURL=user.js.map

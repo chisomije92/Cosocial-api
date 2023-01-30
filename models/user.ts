@@ -4,7 +4,7 @@ import mongoose, { Types } from "mongoose";
 
 const { Schema, model } = mongoose;
 
-export interface UserType {
+export interface UserType extends mongoose.Document {
   _id?: Types.ObjectId;
   username: string;
   email: string;
@@ -14,6 +14,11 @@ export interface UserType {
   followers: number[];
   following: number[];
   isAdmin: boolean;
+  description: string;
+  city: string;
+  from: string;
+  relationship: Number
+
 }
 
 const UserSchema = new Schema<UserType>({
@@ -58,6 +63,26 @@ const UserSchema = new Schema<UserType>({
     type: Boolean,
     default: false,
   },
+  description: {
+    type: String,
+    max: 50,
+    default: ""
+  },
+  city: {
+    type: String,
+    max: 50,
+    default: ""
+  },
+  from: {
+    type: String,
+    max: 50,
+    default: ""
+  },
+  relationship: {
+    type: Number,
+    enum: [1, 2, 3],
+    default: 1
+  }
 },
   { timestamps: true }
 );

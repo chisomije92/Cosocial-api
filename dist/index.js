@@ -13,7 +13,7 @@ const auth_1 = __importDefault(require("./routes/auth"));
 const app = (0, express_1.default)();
 dotenv_1.default.config();
 const { MONGO_URL } = process.env;
-mongoose_1.default.set("strictQuery", true);
+mongoose_1.default.set("strictQuery", false);
 if (MONGO_URL) {
     mongoose_1.default.connect(MONGO_URL)
         .then(() => console.log("Connected to Mongo db"));
