@@ -11,8 +11,8 @@ export interface UserType extends mongoose.Document {
   password: string;
   profilePicture: string;
   coverPicture: string;
-  followers: any[];
-  following: any[];
+  followers: string[];
+  following: string[];
   isAdmin: boolean;
   description: string;
   city: string;

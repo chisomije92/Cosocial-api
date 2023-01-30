@@ -9,7 +9,7 @@ export interface PostType extends mongoose.Document {
   userId: string;
   description: string;
   img: string;
-  likes: any[];
+  likes: string[];
 
 
 }

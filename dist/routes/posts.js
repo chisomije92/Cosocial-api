@@ -9,5 +9,8 @@ const router = express_1.default.Router();
 router.post('/', posts_1.createPosts);
 router.put("/:id", posts_1.updatePost);
 router.delete("/:id", posts_1.deletePost);
+router.get("/:id", posts_1.getPost);
+router.put("/:id/like", posts_1.likePost);
+router.get("/:id/timeline", posts_1.getPostsOnTl);
 exports.default = router;
 //# sourceMappingURL=posts.js.map
