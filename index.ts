@@ -5,6 +5,7 @@ import morgan from "morgan"
 import dotenv from "dotenv"
 import userRoute from "./routes/users"
 import authRoute from "./routes/auth"
+import postRoute from "./routes/posts"
 
 const app = express()
 
@@ -25,6 +26,8 @@ app.use(morgan("common"))
 app.use("/api/users", userRoute)
 
 app.use("/api/auth", authRoute)
+
+app.use('/api/posts', postRoute)
 
 
 app.listen(8000, () => {

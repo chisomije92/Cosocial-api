@@ -10,6 +10,7 @@ const morgan_1 = __importDefault(require("morgan"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const users_1 = __importDefault(require("./routes/users"));
 const auth_1 = __importDefault(require("./routes/auth"));
+const posts_1 = __importDefault(require("./routes/posts"));
 const app = (0, express_1.default)();
 dotenv_1.default.config();
 const { MONGO_URL } = process.env;
@@ -23,6 +24,7 @@ app.use(helmet());
 app.use((0, morgan_1.default)("common"));
 app.use("/api/users", users_1.default);
 app.use("/api/auth", auth_1.default);
+app.use('/api/posts', posts_1.default);
 app.listen(8000, () => {
     console.log("Server is running");
 });
