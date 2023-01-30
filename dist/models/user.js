@@ -34,11 +34,11 @@ const UserSchema = new Schema({
         default: "",
     },
     followers: {
-        type: [Number],
+        type: [String],
         default: [],
     },
     following: {
-        type: [Number],
+        type: [String],
         default: [],
     },
     isAdmin: {

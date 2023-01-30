@@ -11,8 +11,8 @@ export interface UserType extends mongoose.Document {
   password: string;
   profilePicture: string;
   coverPicture: string;
-  followers: number[];
-  following: number[];
+  followers: any[];
+  following: any[];
   isAdmin: boolean;
   description: string;
   city: string;
@@ -50,12 +50,12 @@ const UserSchema = new Schema<UserType>({
   },
 
   followers: {
-    type: [Number],
+    type: [String],
     default: [],
   },
 
   following: {
-    type: [Number],
+    type: [String],
     default: [],
   },
 

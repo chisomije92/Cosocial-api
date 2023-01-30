@@ -23,7 +23,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUser = exports.deleteUser = exports.updateUser = void 0;
+exports.unFollowUser = exports.followUser = exports.getUser = exports.deleteUser = exports.updateUser = void 0;
 const user_1 = __importDefault(require("../models/user"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
@@ -72,7 +72,7 @@ exports.deleteUser = deleteUser;
 const getUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const user = yield user_1.default.findById(req.params.id);
-        const _a = user.toObject(), { password, updatedAt, isAdmin, _id, __v } = _a, rest = __rest(_a, ["password", "updatedAt", "isAdmin", "_id", "__v"]);
+        const _a = user.toObject(), { password, updatedAt, isAdmin, __v } = _a, rest = __rest(_a, ["password", "updatedAt", "isAdmin", "__v"]);
         res.status(200).json(rest);
     }
     catch (err) {
@@ -80,4 +80,64 @@ const getUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
     }
 });
 exports.getUser = getUser;
+const followUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { userId } = req.body;
+    if (userId !== req.params.id) {
+        try {
+            const user = yield user_1.default.findById(req.params.id);
+            const currentUser = yield user_1.default.findById(req.body.userId);
+            if (!currentUser) {
+                return res.status(403).json('User not found!');
+            }
+            if (!user) {
+                return res.status(403).json('Cannot follow a non-existing user');
+            }
+            if (!user.followers.includes(req.body.userId) && currentUser) {
+                yield user.updateOne({ $push: { followers: req.body.userId } });
+                yield currentUser.updateOne({ $push: { following: req.params.id } });
+                res.status(200).json('User has been followed');
+            }
+            else {
+                return res.status(403).json('You already follow this user');
+            }
+        }
+        catch (err) {
+            return res.status(500).json(err);
+        }
+    }
+    else {
+        res.status(403).json("Not allowed to follow yourself");
+    }
+});
+exports.followUser = followUser;
+const unFollowUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { userId } = req.body;
+    if (userId !== req.params.id) {
+        try {
+            const user = yield user_1.default.findById(req.params.id);
+            const currentUser = yield user_1.default.findById(req.body.userId);
+            if (!currentUser) {
+                return res.status(403).json('User not found!');
+            }
+            if (!user) {
+                return res.status(403).json('Cannot unfollow a non-existing user');
+            }
+            if (user.followers.includes(req.body.userId) && currentUser) {
+                yield user.updateOne({ $pull: { followers: req.body.userId } });
+                yield currentUser.updateOne({ $pull: { following: req.params.id } });
+                return res.status(200).json('You have stopped following this user');
+            }
+            else {
+                return res.status(403).json('You do not follow this user');
+            }
+        }
+        catch (err) {
+            return res.status(500).json(err);
+        }
+    }
+    else {
+        res.status(403).json("Not allowed to unfollow yourself");
+    }
+});
+exports.unFollowUser = unFollowUser;
 //# sourceMappingURL=users.js.map

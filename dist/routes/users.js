@@ -9,5 +9,7 @@ const router = express_1.default.Router();
 router.put('/:id', users_1.updateUser);
 router.delete('/:id', users_1.deleteUser);
 router.get("/:id", users_1.getUser);
+router.put("/:id/follow", users_1.followUser);
+router.put("/:id/unfollow", users_1.unFollowUser);
 exports.default = router;
 //# sourceMappingURL=users.js.map
