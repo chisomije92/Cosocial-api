@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getPostsOnTl = exports.getPost = exports.likePost = exports.deletePost = exports.updatePost = exports.createPosts = void 0;
+exports.getPostsOnTL = exports.getPost = exports.likePost = exports.deletePost = exports.updatePost = exports.createPosts = void 0;
 const posts_1 = __importDefault(require("../models/posts"));
 const user_1 = __importDefault(require("../models/user"));
 const createPosts = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
@@ -33,7 +33,7 @@ const updatePost = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
             yield (post === null || post === void 0 ? void 0 : post.updateOne({
                 $set: req.body
             }));
-            res.status(200).json("Post created successfully");
+            res.status(200).json("Post updated successfully");
         }
         else {
             res.status(403).json("You can only update posts made by you");
@@ -47,7 +47,10 @@ exports.updatePost = updatePost;
 const deletePost = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const post = yield posts_1.default.findById(req.params.id);
-        if ((post === null || post === void 0 ? void 0 : post.userId) === req.body.userId) {
+        if (!post) {
+            return res.status(403).json("Post not found!");
+        }
+        if (post.userId === req.body.userId) {
             yield (post === null || post === void 0 ? void 0 : post.deleteOne());
             res.status(200).json("Post deleted successfully");
         }
@@ -69,7 +72,7 @@ const likePost = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
         }
         else {
             yield post.updateOne({ $pull: { likes: req.body.userId } });
-            res.status(403).json("User disliked post");
+            res.status(403).json("Like removed from post");
         }
     }
     catch (err) {
@@ -87,7 +90,7 @@ const getPost = (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
     }
 });
 exports.getPost = getPost;
-const getPostsOnTl = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+const getPostsOnTL = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const currentUser = yield user_1.default.findById(req.params.id);
         const userPosts = yield posts_1.default.find({ userId: currentUser === null || currentUser === void 0 ? void 0 : currentUser._id });
@@ -101,5 +104,5 @@ const getPostsOnTl = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
         res.status(500).json(err);
     }
 });
-exports.getPostsOnTl = getPostsOnTl;
+exports.getPostsOnTL = getPostsOnTL;
 //# sourceMappingURL=posts.js.map

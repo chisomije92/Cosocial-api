@@ -36,7 +36,7 @@ const loginUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function
     try {
         const user = yield user_1.default.findOne({ email: req.body.email });
         if (!user) {
-            res.status(404).json("User not found!");
+            return res.status(404).json("User not found!");
         }
         const validPassword = yield bcrypt_1.default.compare(req.body.password, user.password);
         !validPassword && res.status(400).json("User credentials are incorrect!");

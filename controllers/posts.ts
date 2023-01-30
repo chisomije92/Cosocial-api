@@ -23,7 +23,7 @@ export const updatePost = async (req: Request, res: Response, next: NextFunction
       await post?.updateOne({
         $set: req.body
       })
-      res.status(200).json("Post created successfully")
+      res.status(200).json("Post updated successfully")
 
     } else {
       res.status(403).json("You can only update posts made by you")
@@ -38,7 +38,10 @@ export const deletePost = async (req: Request, res: Response, next: NextFunction
 
   try {
     const post = await Posts.findById(req.params.id)
-    if (post?.userId === req.body.userId) {
+    if (!post) {
+      return res.status(403).json("Post not found!")
+    }
+    if (post.userId === req.body.userId) {
       await post?.deleteOne()
       res.status(200).json("Post deleted successfully")
 
@@ -61,7 +64,7 @@ export const likePost = async (req: Request, res: Response, next: NextFunction) 
 
     } else {
       await post.updateOne({ $pull: { likes: req.body.userId } })
-      res.status(403).json("User disliked post")
+      res.status(403).json("Like removed from post")
     }
   } catch (err) {
     res.status(500).json(err)
@@ -80,7 +83,7 @@ export const getPost = async (req: Request, res: Response, next: NextFunction) =
 
 }
 
-export const getPostsOnTl = async (req: Request, res: Response, next: NextFunction) => {
+export const getPostsOnTL = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const currentUser = await User.findById(req.params.id)
     const userPosts = await Posts.find({ userId: currentUser?._id })

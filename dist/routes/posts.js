@@ -11,6 +11,6 @@ router.put("/:id", posts_1.updatePost);
 router.delete("/:id", posts_1.deletePost);
 router.get("/:id", posts_1.getPost);
 router.put("/:id/like", posts_1.likePost);
-router.get("/:id/timeline", posts_1.getPostsOnTl);
+router.get("/:id/timeline", posts_1.getPostsOnTL);
 exports.default = router;
 //# sourceMappingURL=posts.js.map

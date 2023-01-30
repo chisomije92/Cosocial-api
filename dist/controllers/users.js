@@ -58,7 +58,7 @@ const deleteUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
     if (userId === req.params.id || isAdmin) {
         try {
             const user = yield user_1.default.findByIdAndDelete(userId);
-            res.status(200).json("Account deletion successful!");
+            return res.status(200).json("Account deletion successful!");
         }
         catch (err) {
             return res.status(500).json(err);

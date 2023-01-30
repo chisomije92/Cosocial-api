@@ -32,11 +32,9 @@ export const deleteUser = async (req: Request, res: Response, next: NextFunction
   const { userId, isAdmin } = req.body
 
   if (userId === req.params.id || isAdmin) {
-
-
     try {
       const user = await User.findByIdAndDelete(userId)
-      res.status(200).json("Account deletion successful!")
+      return res.status(200).json("Account deletion successful!")
     } catch (err) {
       return res.status(500).json(err)
     }
