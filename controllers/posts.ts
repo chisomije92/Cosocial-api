@@ -5,7 +5,7 @@ import User from "../models/user";
 
 export const createPosts = async (req: Request, res: Response, next: NextFunction) => {
 
-  const newPost = await new Posts(req.body)
+  const newPost = new Posts(req.body)
 
   try {
     const savedPost = await newPost.save()
@@ -55,7 +55,8 @@ export const deletePost = async (req: Request, res: Response, next: NextFunction
       res.status(200).json("Post deleted successfully")
 
     } else {
-      res.status(403).json("You can only delete posts made by you")
+      const error = new CustomError("You can only delete posts made by you!", 403);
+      throw error;
     }
   } catch (err: any) {
     if (!err.statusCode) {

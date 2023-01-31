@@ -17,7 +17,7 @@ const custom_error_1 = require("./../error-model/custom-error");
 const posts_1 = __importDefault(require("../models/posts"));
 const user_1 = __importDefault(require("../models/user"));
 const createPosts = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const newPost = yield new posts_1.default(req.body);
+    const newPost = new posts_1.default(req.body);
     try {
         const savedPost = yield newPost.save();
         res.status(200).json(savedPost);
@@ -64,7 +64,8 @@ const deletePost = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
             res.status(200).json("Post deleted successfully");
         }
         else {
-            res.status(403).json("You can only delete posts made by you");
+            const error = new custom_error_1.CustomError("You can only delete posts made by you!", 403);
+            throw error;
         }
     }
     catch (err) {

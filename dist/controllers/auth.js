@@ -16,7 +16,13 @@ exports.loginUser = exports.registerUser = void 0;
 const custom_error_1 = require("../error-model/custom-error");
 const user_1 = __importDefault(require("../models/user"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
+const validation_result_1 = require("express-validator/src/validation-result");
 const registerUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const validationErrors = (0, validation_result_1.validationResult)(req);
+    if (!validationErrors.isEmpty()) {
+        const error = new custom_error_1.CustomError("Validation failed, entered data is incorrect", 422, validationErrors.array());
+        return res.status(error.statusCode).json({ message: error.message, errors: error.errors });
+    }
     const { email, password, username } = req.body;
     try {
         const salt = yield bcrypt_1.default.genSalt(10);
@@ -37,13 +43,19 @@ const registerUser = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
 });
 exports.registerUser = registerUser;
 const loginUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { email, password } = req.body;
+    const validationErrors = (0, validation_result_1.validationResult)(req);
+    if (!validationErrors.isEmpty()) {
+        const error = new custom_error_1.CustomError("Validation failed, entered data is incorrect", 422, validationErrors.array());
+        return res.status(error.statusCode).json({ message: error.message, errors: error.errors });
+    }
     try {
-        const user = yield user_1.default.findOne({ email: req.body.email });
+        const user = yield user_1.default.findOne({ email: email });
         if (!user) {
             const error = new custom_error_1.CustomError("User not found!", 404);
             throw error;
         }
-        const validPassword = yield bcrypt_1.default.compare(req.body.password, user.password);
+        const validPassword = yield bcrypt_1.default.compare(password, user.password);
         !validPassword && res.status(400).json("User credentials are incorrect!");
         res.status(200).json(user);
     }
