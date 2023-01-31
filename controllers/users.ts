@@ -4,9 +4,9 @@ import User from "../models/user"
 import bcrypt from "bcrypt"
 
 export const updateUser = async (req: Request, res: Response, next: NextFunction) => {
-  const { userId, password, isAdmin } = req.body
+  const { password, isAdmin } = req.body
 
-  if (userId === req.params.id || isAdmin) {
+  if (req.userId === req.params.id || isAdmin) {
     if (password) {
       try {
         const salt = await bcrypt.genSalt(10)
@@ -20,7 +20,7 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
       }
     }
     try {
-      const user = await User.findByIdAndUpdate(userId, {
+      const user = await User.findByIdAndUpdate(req.userId, {
         $set: req.body
       })
       res.status(200).json("Account updated!")
@@ -40,11 +40,11 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
 
 
 export const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
-  const { userId, isAdmin } = req.body
+  const { isAdmin } = req.body
 
-  if (userId === req.params.id || isAdmin) {
+  if (req.userId === req.params.id || isAdmin) {
     try {
-      const user = await User.findByIdAndDelete(userId)
+      const user = await User.findByIdAndDelete(req.userId)
       return res.status(200).json("Account deletion successful!")
     } catch (err: any) {
       if (!err.statusCode) {
@@ -74,12 +74,11 @@ export const getUser = async (req: Request, res: Response, next: NextFunction) =
 }
 
 export const followUser = async (req: Request, res: Response, next: NextFunction) => {
-  const { userId } = req.body
-  if (userId !== req.params.id) {
+  if (req.userId !== req.params.id) {
     try {
 
       const user = await User.findById(req.params.id)
-      const currentUser = await User.findById(req.body.userId)
+      const currentUser = await User.findById(req.userId)
       if (!currentUser) {
         const error = new CustomError("User not found!", 403);
         throw error;
@@ -89,15 +88,18 @@ export const followUser = async (req: Request, res: Response, next: NextFunction
         throw error;
       }
 
-      if (!user.followers.includes(req.body.userId) && currentUser) {
 
-        await user.updateOne({ $push: { followers: req.body.userId } })
-        await currentUser.updateOne({ $push: { following: req.params.id } })
-        res.status(200).json('User has been followed')
-      } else {
-        const error = new CustomError("You already follow this user!", 403);
-        throw error;
+      if (req.userId) {
+        if (!user.followers.includes(req.userId) && currentUser) {
+          await user.updateOne({ $push: { followers: req.userId } })
+          await currentUser.updateOne({ $push: { following: req.params.id } })
+          res.status(200).json('User has been followed')
+        } else {
+          const error = new CustomError("You already follow this user!", 403);
+          throw error;
+        }
       }
+
     } catch (err: any) {
       if (!err.statusCode) {
         err.statusCode = 500;
@@ -112,12 +114,11 @@ export const followUser = async (req: Request, res: Response, next: NextFunction
 }
 
 export const unFollowUser = async (req: Request, res: Response, next: NextFunction) => {
-  const { userId } = req.body
+  const { userId } = req
   if (userId !== req.params.id) {
     try {
-
       const user = await User.findById(req.params.id)
-      const currentUser = await User.findById(req.body.userId)
+      const currentUser = await User.findById(userId)
       if (!currentUser) {
         const error = new CustomError("User not found!", 403);
         throw error;
@@ -127,15 +128,19 @@ export const unFollowUser = async (req: Request, res: Response, next: NextFuncti
         throw error;
       }
 
-      if (user.followers.includes(req.body.userId) && currentUser) {
+      if (userId) {
+        if (user.followers.includes(userId) && currentUser) {
 
-        await user.updateOne({ $pull: { followers: req.body.userId } })
-        await currentUser.updateOne({ $pull: { following: req.params.id } })
-        return res.status(200).json('You have stopped following this user')
-      } else {
-        const error = new CustomError("You do not follow this user!", 403);
-        throw error;
+          await user.updateOne({ $pull: { followers: userId } })
+          await currentUser.updateOne({ $pull: { following: req.params.id } })
+          return res.status(200).json('You have stopped following this user')
+        } else {
+          const error = new CustomError("You do not follow this user!", 403);
+          throw error;
+        }
       }
+
+
     } catch (err: any) {
       if (!err.statusCode) {
         err.statusCode = 500;

@@ -5,7 +5,7 @@ import User from "../models/user";
 
 export const createPosts = async (req: Request, res: Response, next: NextFunction) => {
 
-  const newPost = new Posts(req.body)
+  const newPost = new Posts({ ...req.body, userId: req.userId })
 
   try {
     const savedPost = await newPost.save()
@@ -23,7 +23,7 @@ export const updatePost = async (req: Request, res: Response, next: NextFunction
 
   try {
     const post = await Posts.findById(req.params.id)
-    if (post?.userId === req.body.userId) {
+    if (post?.userId === req.userId) {
       await post?.updateOne({
         $set: req.body
       })
@@ -50,7 +50,7 @@ export const deletePost = async (req: Request, res: Response, next: NextFunction
       const error = new CustomError("Post not found!", 403);
       throw error;
     }
-    if (post.userId === req.body.userId) {
+    if (post.userId === req.userId) {
       await post?.deleteOne()
       res.status(200).json("Post deleted successfully")
 
@@ -71,14 +71,21 @@ export const likePost = async (req: Request, res: Response, next: NextFunction) 
 
   try {
     const post = await Posts.findById(req.params.id)
-    if (!post?.likes.includes(req.body.userId)) {
-      await post?.updateOne({ $push: { likes: req.body.userId } })
-      res.status(200).json("User liked post!")
-
-    } else {
-      await post.updateOne({ $pull: { likes: req.body.userId } })
-      res.status(403).json("Like removed from post")
+    if (!post) {
+      const error = new CustomError("Post not found!", 403);
+      throw error;
     }
+    if (req.userId) {
+      if (!post?.likes.includes(req.userId)) {
+        await post?.updateOne({ $push: { likes: req.userId } })
+        res.status(200).json("User liked post!")
+
+      } else {
+        await post.updateOne({ $pull: { likes: req.userId } })
+        res.status(403).json("Like removed from post")
+      }
+    }
+
   } catch (err: any) {
     if (!err.statusCode) {
       err.statusCode = 500;

@@ -28,8 +28,8 @@ const custom_error_1 = require("./../error-model/custom-error");
 const user_1 = __importDefault(require("../models/user"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const { userId, password, isAdmin } = req.body;
-    if (userId === req.params.id || isAdmin) {
+    const { password, isAdmin } = req.body;
+    if (req.userId === req.params.id || isAdmin) {
         if (password) {
             try {
                 const salt = yield bcrypt_1.default.genSalt(10);
@@ -43,7 +43,7 @@ const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
             }
         }
         try {
-            const user = yield user_1.default.findByIdAndUpdate(userId, {
+            const user = yield user_1.default.findByIdAndUpdate(req.userId, {
                 $set: req.body
             });
             res.status(200).json("Account updated!");
@@ -62,10 +62,10 @@ const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
 });
 exports.updateUser = updateUser;
 const deleteUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const { userId, isAdmin } = req.body;
-    if (userId === req.params.id || isAdmin) {
+    const { isAdmin } = req.body;
+    if (req.userId === req.params.id || isAdmin) {
         try {
-            const user = yield user_1.default.findByIdAndDelete(userId);
+            const user = yield user_1.default.findByIdAndDelete(req.userId);
             return res.status(200).json("Account deletion successful!");
         }
         catch (err) {
@@ -96,11 +96,10 @@ const getUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.getUser = getUser;
 const followUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const { userId } = req.body;
-    if (userId !== req.params.id) {
+    if (req.userId !== req.params.id) {
         try {
             const user = yield user_1.default.findById(req.params.id);
-            const currentUser = yield user_1.default.findById(req.body.userId);
+            const currentUser = yield user_1.default.findById(req.userId);
             if (!currentUser) {
                 const error = new custom_error_1.CustomError("User not found!", 403);
                 throw error;
@@ -109,14 +108,16 @@ const followUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
                 const error = new custom_error_1.CustomError("You cannot follow a non-existing user!", 403);
                 throw error;
             }
-            if (!user.followers.includes(req.body.userId) && currentUser) {
-                yield user.updateOne({ $push: { followers: req.body.userId } });
-                yield currentUser.updateOne({ $push: { following: req.params.id } });
-                res.status(200).json('User has been followed');
-            }
-            else {
-                const error = new custom_error_1.CustomError("You already follow this user!", 403);
-                throw error;
+            if (req.userId) {
+                if (!user.followers.includes(req.userId) && currentUser) {
+                    yield user.updateOne({ $push: { followers: req.userId } });
+                    yield currentUser.updateOne({ $push: { following: req.params.id } });
+                    res.status(200).json('User has been followed');
+                }
+                else {
+                    const error = new custom_error_1.CustomError("You already follow this user!", 403);
+                    throw error;
+                }
             }
         }
         catch (err) {
@@ -133,11 +134,11 @@ const followUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
 });
 exports.followUser = followUser;
 const unFollowUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const { userId } = req.body;
+    const { userId } = req;
     if (userId !== req.params.id) {
         try {
             const user = yield user_1.default.findById(req.params.id);
-            const currentUser = yield user_1.default.findById(req.body.userId);
+            const currentUser = yield user_1.default.findById(userId);
             if (!currentUser) {
                 const error = new custom_error_1.CustomError("User not found!", 403);
                 throw error;
@@ -146,14 +147,16 @@ const unFollowUser = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
                 const error = new custom_error_1.CustomError("Can not unfollow a non-existing user!", 403);
                 throw error;
             }
-            if (user.followers.includes(req.body.userId) && currentUser) {
-                yield user.updateOne({ $pull: { followers: req.body.userId } });
-                yield currentUser.updateOne({ $pull: { following: req.params.id } });
-                return res.status(200).json('You have stopped following this user');
-            }
-            else {
-                const error = new custom_error_1.CustomError("You do not follow this user!", 403);
-                throw error;
+            if (userId) {
+                if (user.followers.includes(userId) && currentUser) {
+                    yield user.updateOne({ $pull: { followers: userId } });
+                    yield currentUser.updateOne({ $pull: { following: req.params.id } });
+                    return res.status(200).json('You have stopped following this user');
+                }
+                else {
+                    const error = new custom_error_1.CustomError("You do not follow this user!", 403);
+                    throw error;
+                }
             }
         }
         catch (err) {

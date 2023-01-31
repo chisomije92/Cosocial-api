@@ -17,7 +17,7 @@ const custom_error_1 = require("./../error-model/custom-error");
 const posts_1 = __importDefault(require("../models/posts"));
 const user_1 = __importDefault(require("../models/user"));
 const createPosts = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const newPost = new posts_1.default(req.body);
+    const newPost = new posts_1.default(Object.assign(Object.assign({}, req.body), { userId: req.userId }));
     try {
         const savedPost = yield newPost.save();
         res.status(200).json(savedPost);
@@ -33,7 +33,7 @@ exports.createPosts = createPosts;
 const updatePost = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const post = yield posts_1.default.findById(req.params.id);
-        if ((post === null || post === void 0 ? void 0 : post.userId) === req.body.userId) {
+        if ((post === null || post === void 0 ? void 0 : post.userId) === req.userId) {
             yield (post === null || post === void 0 ? void 0 : post.updateOne({
                 $set: req.body
             }));
@@ -59,7 +59,7 @@ const deletePost = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
             const error = new custom_error_1.CustomError("Post not found!", 403);
             throw error;
         }
-        if (post.userId === req.body.userId) {
+        if (post.userId === req.userId) {
             yield (post === null || post === void 0 ? void 0 : post.deleteOne());
             res.status(200).json("Post deleted successfully");
         }
@@ -79,13 +79,19 @@ exports.deletePost = deletePost;
 const likePost = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const post = yield posts_1.default.findById(req.params.id);
-        if (!(post === null || post === void 0 ? void 0 : post.likes.includes(req.body.userId))) {
-            yield (post === null || post === void 0 ? void 0 : post.updateOne({ $push: { likes: req.body.userId } }));
-            res.status(200).json("User liked post!");
+        if (!post) {
+            const error = new custom_error_1.CustomError("Post not found!", 403);
+            throw error;
         }
-        else {
-            yield post.updateOne({ $pull: { likes: req.body.userId } });
-            res.status(403).json("Like removed from post");
+        if (req.userId) {
+            if (!(post === null || post === void 0 ? void 0 : post.likes.includes(req.userId))) {
+                yield (post === null || post === void 0 ? void 0 : post.updateOne({ $push: { likes: req.userId } }));
+                res.status(200).json("User liked post!");
+            }
+            else {
+                yield post.updateOne({ $pull: { likes: req.userId } });
+                res.status(403).json("Like removed from post");
+            }
         }
     }
     catch (err) {
