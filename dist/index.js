@@ -25,6 +25,11 @@ app.use((0, morgan_1.default)("common"));
 app.use("/api/users", users_1.default);
 app.use("/api/auth", auth_1.default);
 app.use('/api/posts', posts_1.default);
+app.use((error, req, res, next) => {
+    const status = error.statusCode || 500;
+    const message = error.message;
+    res.status(status).json({ message: message });
+});
 app.listen(8000, () => {
     console.log("Server is running");
 });

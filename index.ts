@@ -1,4 +1,5 @@
-import express from "express"
+
+import express, { Request, Response, NextFunction } from "express"
 import mongoose from "mongoose"
 const helmet = require("helmet")
 import morgan from "morgan"
@@ -28,6 +29,12 @@ app.use("/api/users", userRoute)
 app.use("/api/auth", authRoute)
 
 app.use('/api/posts', postRoute)
+
+app.use((error: any, req: Request, res: Response, next: NextFunction) => {
+  const status = error.statusCode || 500;
+  const message = error.message;
+  res.status(status).json({ message: message });
+});
 
 
 app.listen(8000, () => {

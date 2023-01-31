@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.loginUser = exports.registerUser = void 0;
+const custom_error_1 = require("../error-model/custom-error");
 const user_1 = __importDefault(require("../models/user"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const registerUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
@@ -20,15 +21,18 @@ const registerUser = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
     try {
         const salt = yield bcrypt_1.default.genSalt(10);
         const hashedPassword = yield bcrypt_1.default.hash(password, salt);
-        const newUser = yield new user_1.default({
+        const newUser = new user_1.default({
             username: username,
             email: email,
             password: hashedPassword
         });
         yield newUser.save().then((data) => res.status(200).json(data));
     }
-    catch (error) {
-        res.status(500).json(error);
+    catch (err) {
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
     }
 });
 exports.registerUser = registerUser;
@@ -36,14 +40,18 @@ const loginUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function
     try {
         const user = yield user_1.default.findOne({ email: req.body.email });
         if (!user) {
-            return res.status(404).json("User not found!");
+            const error = new custom_error_1.CustomError("User not found!", 404);
+            throw error;
         }
         const validPassword = yield bcrypt_1.default.compare(req.body.password, user.password);
         !validPassword && res.status(400).json("User credentials are incorrect!");
         res.status(200).json(user);
     }
     catch (err) {
-        res.status(500).json(err);
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
     }
 });
 exports.loginUser = loginUser;
