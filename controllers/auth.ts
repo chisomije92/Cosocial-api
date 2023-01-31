@@ -1,9 +1,19 @@
+import dotenv from 'dotenv';
 import { CustomError } from '../error-model/custom-error';
 import { Request, Response, NextFunction } from "express";
 import User from "../models/user"
 import bcrypt from "bcrypt"
 import { validationResult } from 'express-validator/src/validation-result';
+import { sign } from 'jsonwebtoken';
 
+dotenv.config()
+const { JWT_SECRET } = process.env
+let secret: string
+if (JWT_SECRET) {
+  secret = JWT_SECRET
+} else {
+  throw new Error("JWT_SECRET is not set");
+}
 
 export const registerUser = async (req: Request, res: Response, next: NextFunction) => {
   const validationErrors = validationResult(req)
@@ -13,6 +23,11 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
   }
   const { email, password, username } = req.body
   try {
+    const existingEmail = await User.find({ email })
+    if (existingEmail) {
+      const error = new CustomError("User exists already!", 409)
+      throw error
+    }
     const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash(password, salt)
     const newUser = new User({
@@ -20,7 +35,12 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
       email: email,
       password: hashedPassword
     })
-    await newUser.save().then((data) => res.status(200).json(data))
+    const savedUser = await newUser.save()
+    const token = sign({
+      email: savedUser.email,
+      userId: savedUser._id.toString()
+    }, secret, { expiresIn: '1h' })
+    res.status(200).json({ token, userId: savedUser._id.toString() })
 
   } catch (err: any) {
     if (!err.statusCode) {
@@ -46,8 +66,16 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
       throw error;
     }
     const validPassword = await bcrypt.compare(password, user!.password)
-    !validPassword && res.status(400).json("User credentials are incorrect!")
-    res.status(200).json(user)
+    if (!validPassword) {
+      const error = new CustomError("User credentials are invalid!", 400);
+      throw error;
+
+    }
+    const token = sign({
+      email: user.email,
+      userId: user._id.toString()
+    }, secret, { expiresIn: '1h' })
+    res.status(200).json({ token, userId: user._id.toString() })
   } catch (err: any) {
     if (!err.statusCode) {
       err.statusCode = 500;

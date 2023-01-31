@@ -85,7 +85,7 @@ export const followUser = async (req: Request, res: Response, next: NextFunction
         throw error;
       }
       if (!user) {
-        const error = new CustomError("You v=cannot follow a non-existing user!", 403);
+        const error = new CustomError("You cannot follow a non-existing user!", 403);
         throw error;
       }
 

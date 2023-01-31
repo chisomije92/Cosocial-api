@@ -106,7 +106,7 @@ const followUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
                 throw error;
             }
             if (!user) {
-                const error = new custom_error_1.CustomError("You v=cannot follow a non-existing user!", 403);
+                const error = new custom_error_1.CustomError("You cannot follow a non-existing user!", 403);
                 throw error;
             }
             if (!user.followers.includes(req.body.userId) && currentUser) {

@@ -20,7 +20,8 @@ interface UserType {
 declare global {
   namespace Express {
     interface Request {
-      user?: Record<string, UserType> | null;
+      //user?: Record<string, UserType> | null;
+      userId?: string
       isAdmin?: boolean;
     }
   }

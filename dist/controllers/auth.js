@@ -13,10 +13,21 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.loginUser = exports.registerUser = void 0;
+const dotenv_1 = __importDefault(require("dotenv"));
 const custom_error_1 = require("../error-model/custom-error");
 const user_1 = __importDefault(require("../models/user"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const validation_result_1 = require("express-validator/src/validation-result");
+const jsonwebtoken_1 = require("jsonwebtoken");
+dotenv_1.default.config();
+const { JWT_SECRET } = process.env;
+let secret;
+if (JWT_SECRET) {
+    secret = JWT_SECRET;
+}
+else {
+    throw new Error("JWT_SECRET is not set");
+}
 const registerUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const validationErrors = (0, validation_result_1.validationResult)(req);
     if (!validationErrors.isEmpty()) {
@@ -25,6 +36,11 @@ const registerUser = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
     }
     const { email, password, username } = req.body;
     try {
+        const existingEmail = yield user_1.default.find({ email });
+        if (existingEmail) {
+            const error = new custom_error_1.CustomError("User exists already!", 409);
+            throw error;
+        }
         const salt = yield bcrypt_1.default.genSalt(10);
         const hashedPassword = yield bcrypt_1.default.hash(password, salt);
         const newUser = new user_1.default({
@@ -32,7 +48,12 @@ const registerUser = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
             email: email,
             password: hashedPassword
         });
-        yield newUser.save().then((data) => res.status(200).json(data));
+        const savedUser = yield newUser.save();
+        const token = (0, jsonwebtoken_1.sign)({
+            email: savedUser.email,
+            userId: savedUser._id.toString()
+        }, secret, { expiresIn: '1h' });
+        res.status(200).json({ token, userId: savedUser._id.toString() });
     }
     catch (err) {
         if (!err.statusCode) {
@@ -56,8 +77,15 @@ const loginUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function
             throw error;
         }
         const validPassword = yield bcrypt_1.default.compare(password, user.password);
-        !validPassword && res.status(400).json("User credentials are incorrect!");
-        res.status(200).json(user);
+        if (!validPassword) {
+            const error = new custom_error_1.CustomError("User credentials are invalid!", 400);
+            throw error;
+        }
+        const token = (0, jsonwebtoken_1.sign)({
+            email: user.email,
+            userId: user._id.toString()
+        }, secret, { expiresIn: '1h' });
+        res.status(200).json({ token, userId: user._id.toString() });
     }
     catch (err) {
         if (!err.statusCode) {

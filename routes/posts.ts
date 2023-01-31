@@ -1,16 +1,17 @@
 import { createPosts, deletePost, updatePost, likePost, getPost, getPostsOnTL } from './../controllers/posts';
 import express from "express"
+import isAuth from '../middlewares/is-auth';
 
 
 const router = express.Router()
 
 
-router.post('/', createPosts)
-router.put("/:id", updatePost)
-router.delete("/:id", deletePost)
-router.get("/:id", getPost)
-router.put("/:id/like", likePost)
-router.get("/:id/timeline", getPostsOnTL)
+router.post('/', isAuth, createPosts)
+router.put("/:id", isAuth, updatePost)
+router.delete("/:id", isAuth, deletePost)
+router.get("/:id", isAuth, getPost)
+router.put("/:id/like", isAuth, likePost)
+router.get("/:id/timeline", isAuth, getPostsOnTL)
 
 
 export default router
