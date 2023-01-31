@@ -24,6 +24,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.unFollowUser = exports.followUser = exports.getUser = exports.deleteUser = exports.updateUser = void 0;
+const custom_error_1 = require("./../error-model/custom-error");
 const user_1 = __importDefault(require("../models/user"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
@@ -35,7 +36,10 @@ const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
                 req.body.password = yield bcrypt_1.default.hash(password, salt);
             }
             catch (err) {
-                return res.status(500).json(err);
+                if (!err.statusCode) {
+                    err.statusCode = 500;
+                }
+                next(err);
             }
         }
         try {
@@ -45,11 +49,15 @@ const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
             res.status(200).json("Account updated!");
         }
         catch (err) {
-            return res.status(500).json(err);
+            if (!err.statusCode) {
+                err.statusCode = 500;
+            }
+            next(err);
         }
     }
     else {
-        return res.status(403).json("Update not allowed! Not authorized to update account!");
+        const error = new custom_error_1.CustomError("Update not allowed! Not authorized to update account!", 403);
+        next(error);
     }
 });
 exports.updateUser = updateUser;
@@ -61,11 +69,15 @@ const deleteUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
             return res.status(200).json("Account deletion successful!");
         }
         catch (err) {
-            return res.status(500).json(err);
+            if (!err.statusCode) {
+                err.statusCode = 500;
+            }
+            next(err);
         }
     }
     else {
-        return res.status(403).json("Deletion not allowed! Not authorized to delete account!");
+        const error = new custom_error_1.CustomError("Deletion not allowed! Not authorized to delete account", 403);
+        next(error);
     }
 });
 exports.deleteUser = deleteUser;
@@ -76,7 +88,10 @@ const getUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
         res.status(200).json(rest);
     }
     catch (err) {
-        res.status(500).json(err);
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
     }
 });
 exports.getUser = getUser;
@@ -87,10 +102,12 @@ const followUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
             const user = yield user_1.default.findById(req.params.id);
             const currentUser = yield user_1.default.findById(req.body.userId);
             if (!currentUser) {
-                return res.status(403).json('User not found!');
+                const error = new custom_error_1.CustomError("User not found!", 403);
+                throw error;
             }
             if (!user) {
-                return res.status(403).json('Cannot follow a non-existing user');
+                const error = new custom_error_1.CustomError("You v=cannot follow a non-existing user!", 403);
+                throw error;
             }
             if (!user.followers.includes(req.body.userId) && currentUser) {
                 yield user.updateOne({ $push: { followers: req.body.userId } });
@@ -98,15 +115,20 @@ const followUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
                 res.status(200).json('User has been followed');
             }
             else {
-                return res.status(403).json('You already follow this user');
+                const error = new custom_error_1.CustomError("You already follow this user!", 403);
+                throw error;
             }
         }
         catch (err) {
-            return res.status(500).json(err);
+            if (!err.statusCode) {
+                err.statusCode = 500;
+            }
+            next(err);
         }
     }
     else {
-        res.status(403).json("Not allowed to follow yourself");
+        const error = new custom_error_1.CustomError("Not allowed to follow yourself!", 403);
+        next(error);
     }
 });
 exports.followUser = followUser;
@@ -117,10 +139,12 @@ const unFollowUser = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
             const user = yield user_1.default.findById(req.params.id);
             const currentUser = yield user_1.default.findById(req.body.userId);
             if (!currentUser) {
-                return res.status(403).json('User not found!');
+                const error = new custom_error_1.CustomError("User not found!", 403);
+                throw error;
             }
             if (!user) {
-                return res.status(403).json('Cannot unfollow a non-existing user');
+                const error = new custom_error_1.CustomError("Can not unfollow a non-existing user!", 403);
+                throw error;
             }
             if (user.followers.includes(req.body.userId) && currentUser) {
                 yield user.updateOne({ $pull: { followers: req.body.userId } });
@@ -128,15 +152,20 @@ const unFollowUser = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
                 return res.status(200).json('You have stopped following this user');
             }
             else {
-                return res.status(403).json('You do not follow this user');
+                const error = new custom_error_1.CustomError("You do not follow this user!", 403);
+                throw error;
             }
         }
         catch (err) {
-            return res.status(500).json(err);
+            if (!err.statusCode) {
+                err.statusCode = 500;
+            }
+            next(err);
         }
     }
     else {
-        res.status(403).json("Not allowed to unfollow yourself");
+        const error = new custom_error_1.CustomError("You are not allowed to unfollow yourself!", 403);
+        next(error);
     }
 });
 exports.unFollowUser = unFollowUser;

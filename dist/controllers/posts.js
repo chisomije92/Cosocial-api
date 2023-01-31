@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getPostsOnTL = exports.getPost = exports.likePost = exports.deletePost = exports.updatePost = exports.createPosts = void 0;
+const custom_error_1 = require("./../error-model/custom-error");
 const posts_1 = __importDefault(require("../models/posts"));
 const user_1 = __importDefault(require("../models/user"));
 const createPosts = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
@@ -22,7 +23,10 @@ const createPosts = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
         res.status(200).json(savedPost);
     }
     catch (err) {
-        res.status(500).json(err);
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
     }
 });
 exports.createPosts = createPosts;
@@ -36,11 +40,15 @@ const updatePost = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
             res.status(200).json("Post updated successfully");
         }
         else {
-            res.status(403).json("You can only update posts made by you");
+            const error = new custom_error_1.CustomError("You can only update posts made by you!", 403);
+            throw error;
         }
     }
     catch (err) {
-        res.status(500).json(err);
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
     }
 });
 exports.updatePost = updatePost;
@@ -48,7 +56,8 @@ const deletePost = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
     try {
         const post = yield posts_1.default.findById(req.params.id);
         if (!post) {
-            return res.status(403).json("Post not found!");
+            const error = new custom_error_1.CustomError("Post not found!", 403);
+            throw error;
         }
         if (post.userId === req.body.userId) {
             yield (post === null || post === void 0 ? void 0 : post.deleteOne());
@@ -59,7 +68,10 @@ const deletePost = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
         }
     }
     catch (err) {
-        res.status(500).json(err);
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
     }
 });
 exports.deletePost = deletePost;
@@ -76,7 +88,10 @@ const likePost = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
         }
     }
     catch (err) {
-        res.status(500).json(err);
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
     }
 });
 exports.likePost = likePost;
@@ -86,7 +101,10 @@ const getPost = (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
         res.status(200).json(post);
     }
     catch (err) {
-        res.status(500).json(err);
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
     }
 });
 exports.getPost = getPost;
@@ -95,13 +113,17 @@ const getPostsOnTL = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
         const currentUser = yield user_1.default.findById(req.params.id);
         const userPosts = yield posts_1.default.find({ userId: currentUser === null || currentUser === void 0 ? void 0 : currentUser._id });
         if (!currentUser) {
-            return res.status(403).json("No user found!");
+            const error = new custom_error_1.CustomError("User not found!", 404);
+            throw error;
         }
         const friendPosts = yield Promise.all(currentUser.following.map(friendId => { return posts_1.default.find({ userId: friendId }); }));
         res.status(200).json(userPosts.concat(...friendPosts));
     }
     catch (err) {
-        res.status(500).json(err);
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
     }
 });
 exports.getPostsOnTL = getPostsOnTL;
