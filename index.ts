@@ -7,6 +7,7 @@ import dotenv from "dotenv"
 import userRoute from "./routes/users"
 import authRoute from "./routes/auth"
 import postRoute from "./routes/posts"
+import cors from 'cors';
 
 const app = express()
 
@@ -20,6 +21,7 @@ if (MONGO_URL) {
     .then(() => console.log("Connected to Mongo db"))
 }
 
+app.use(cors<Request>())
 app.use(express.json())
 app.use(helmet())
 app.use(morgan("common"))
