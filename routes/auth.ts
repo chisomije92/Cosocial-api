@@ -1,8 +1,9 @@
+
 /** @format */
 
 import express from "express";
 import { body } from "express-validator";
-import { registerUser } from "../controllers/auth";
+import { registerUser } from "./../controllers/auth";
 import { loginUser } from "./../controllers/auth";
 
 const router = express.Router();
@@ -15,6 +16,7 @@ router.post(
     body("password").isLength({ min: 6 }),
   ],
   registerUser
+
 );
 
 router.post(

@@ -24,7 +24,7 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
   }
   const { email, password, username } = req.body
   try {
-    const existingEmail = await User.find({ email })
+    const existingEmail = await User.findOne({ email: email })
     if (existingEmail) {
       const error = new CustomError("User exists already!", 409)
       throw error
@@ -43,6 +43,7 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
     }, secret, { expiresIn: '1h' })
     res.status(200).json({ token, userId: savedUser._id.toString() })
 
+
   } catch (err: any) {
     if (!err.statusCode) {
       err.statusCode = 500;
@@ -51,6 +52,8 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
   }
 
 }
+
+
 
 
 export const loginUser = async (req: Request, res: Response, next: NextFunction) => {

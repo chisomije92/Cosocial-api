@@ -36,7 +36,7 @@ const registerUser = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
     }
     const { email, password, username } = req.body;
     try {
-        const existingEmail = yield user_1.default.find({ email });
+        const existingEmail = yield user_1.default.findOne({ email: email });
         if (existingEmail) {
             const error = new custom_error_1.CustomError("User exists already!", 409);
             throw error;
