@@ -24,11 +24,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.unFollowUser = exports.followUser = exports.getUser = exports.deleteUser = exports.updateUser = void 0;
+const validation_result_1 = require("express-validator/src/validation-result");
 const custom_error_1 = require("./../error-model/custom-error");
 const user_1 = __importDefault(require("../models/user"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const { password, isAdmin } = req.body;
+    const validationErrors = (0, validation_result_1.validationResult)(req);
+    if (!validationErrors.isEmpty()) {
+        const error = new custom_error_1.CustomError("Validation failed, entered data is incorrect", 422, validationErrors.array());
+        return res.status(error.statusCode).json({ message: error.message, errors: error.errors });
+    }
     if (req.userId === req.params.id || isAdmin) {
         if (password) {
             try {
@@ -46,7 +52,7 @@ const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
             const user = yield user_1.default.findByIdAndUpdate(req.userId, {
                 $set: req.body
             });
-            res.status(200).json("Account updated!");
+            res.status(200).json(user);
         }
         catch (err) {
             if (!err.statusCode) {

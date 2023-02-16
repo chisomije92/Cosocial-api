@@ -8,9 +8,16 @@ import { deleteUser, updateUser, getUser, followUser, unFollowUser } from './../
 const router = express.Router()
 
 router.put('/:id', isAuth, [
-  body("email").isEmail().normalizeEmail().optional({ nullable: true, checkFalsy: true }),
-  body("username").trim().isLength({ min: 4 }).optional({ nullable: true, checkFalsy: true }),
-  body("password").isLength({ min: 6 }).optional({ nullable: true, checkFalsy: true }),
+  body("email")
+    //.notEmpty()
+    .optional()
+    //exists({ checkFalsy: true, checkNull: true })
+    .isEmail(),
+  body("username").trim().isLength({ min: 4 })
+    .optional({ nullable: true, checkFalsy: true })
+  ,
+  body("password").isLength({ min: 6 })
+    .optional({ nullable: true, checkFalsy: true }),
 ], updateUser)
 router.delete('/:id', isAuth, deleteUser)
 router.get("/:id", isAuth, getUser)

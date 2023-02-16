@@ -9,9 +9,15 @@ const express_validator_1 = require("express-validator");
 const users_1 = require("./../controllers/users");
 const router = express_1.default.Router();
 router.put('/:id', is_auth_1.default, [
-    (0, express_validator_1.body)("email").isEmail().normalizeEmail().optional({ nullable: true, checkFalsy: true }),
-    (0, express_validator_1.body)("username").trim().isLength({ min: 4 }).optional({ nullable: true, checkFalsy: true }),
-    (0, express_validator_1.body)("password").isLength({ min: 6 }).optional({ nullable: true, checkFalsy: true }),
+    (0, express_validator_1.body)("email")
+        //.notEmpty()
+        .optional()
+        //exists({ checkFalsy: true, checkNull: true })
+        .isEmail(),
+    (0, express_validator_1.body)("username").trim().isLength({ min: 4 })
+        .optional({ nullable: true, checkFalsy: true }),
+    (0, express_validator_1.body)("password").isLength({ min: 6 })
+        .optional({ nullable: true, checkFalsy: true }),
 ], users_1.updateUser);
 router.delete('/:id', is_auth_1.default, users_1.deleteUser);
 router.get("/:id", is_auth_1.default, users_1.getUser);
