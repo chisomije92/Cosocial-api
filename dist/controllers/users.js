@@ -23,7 +23,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.unFollowUser = exports.followUser = exports.getUser = exports.deleteUser = exports.updateUser = void 0;
+exports.unFollowUser = exports.followUser = exports.getUser = exports.deleteUser = exports.changePassword = exports.updateUser = void 0;
 const validation_result_1 = require("express-validator/src/validation-result");
 const custom_error_1 = require("./../error-model/custom-error");
 const user_1 = __importDefault(require("../models/user"));
@@ -36,23 +36,11 @@ const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
         return res.status(error.statusCode).json({ message: error.message, errors: error.errors });
     }
     if (req.userId === req.params.id || isAdmin) {
-        if (password) {
-            try {
-                const salt = yield bcrypt_1.default.genSalt(10);
-                req.body.password = yield bcrypt_1.default.hash(password, salt);
-            }
-            catch (err) {
-                if (!err.statusCode) {
-                    err.statusCode = 500;
-                }
-                next(err);
-            }
-        }
         try {
             const user = yield user_1.default.findByIdAndUpdate(req.userId, {
                 $set: req.body
             });
-            res.status(200).json(user);
+            res.status(200).json("Account updated");
         }
         catch (err) {
             if (!err.statusCode) {
@@ -67,6 +55,44 @@ const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
     }
 });
 exports.updateUser = updateUser;
+const changePassword = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { oldPassword, newPassword } = req.body;
+    const validationErrors = (0, validation_result_1.validationResult)(req);
+    if (!validationErrors.isEmpty()) {
+        const error = new custom_error_1.CustomError("Validation failed, entered data is incorrect", 422, validationErrors.array());
+        return res.status(error.statusCode).json({ message: error.message, errors: error.errors });
+    }
+    try {
+        const user = yield user_1.default.findById(req.userId);
+        if (!user) {
+            const error = new custom_error_1.CustomError("User does not exist!", 403);
+            throw error;
+        }
+        const salt = yield bcrypt_1.default.genSalt(10);
+        const oldHashedPassword = yield bcrypt_1.default.hash(oldPassword, salt);
+        const isValid = yield bcrypt_1.default.compare(oldPassword, user.password);
+        if (!isValid) {
+            const error = new custom_error_1.CustomError("Credentials are incorrect!", 403);
+            throw error;
+        }
+        const isEqual = yield bcrypt_1.default.compare(newPassword, oldHashedPassword);
+        if (isEqual) {
+            const error = new custom_error_1.CustomError("Old password is same as new password!", 403);
+            throw error;
+        }
+        const newHashedPassword = yield bcrypt_1.default.hash(newPassword, salt);
+        user.password = newHashedPassword;
+        yield user.save();
+        res.status(200).json(user);
+    }
+    catch (err) {
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
+    }
+});
+exports.changePassword = changePassword;
 const deleteUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const { isAdmin } = req.body;
     if (req.userId === req.params.id || isAdmin) {

@@ -13,23 +13,12 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
   }
 
   if (req.userId === req.params.id || isAdmin) {
-    if (password) {
-      try {
-        const salt = await bcrypt.genSalt(10)
-        req.body.password = await bcrypt.hash(password, salt)
 
-      } catch (err: any) {
-        if (!err.statusCode) {
-          err.statusCode = 500;
-        }
-        next(err)
-      }
-    }
     try {
       const user = await User.findByIdAndUpdate(req.userId, {
         $set: req.body
       })
-      res.status(200).json(user)
+      res.status(200).json("Account updated")
     } catch (err: any) {
       if (!err.statusCode) {
         err.statusCode = 500;
@@ -41,6 +30,46 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
     const error = new CustomError("Update not allowed! Not authorized to update account!", 403);
     next(error);
   }
+}
+
+export const changePassword = async (req: Request, res: Response, next: NextFunction) => {
+  const { oldPassword, newPassword } = req.body
+  const validationErrors = validationResult(req)
+  if (!validationErrors.isEmpty()) {
+    const error = new CustomError("Validation failed, entered data is incorrect", 422, validationErrors.array());
+    return res.status(error.statusCode).json({ message: error.message, errors: error.errors })
+  }
+  try {
+    const user = await User.findById(req.userId)
+    if (!user) {
+      const error = new CustomError("User does not exist!", 403);
+      throw error;
+    }
+
+    const salt = await bcrypt.genSalt(10)
+    const oldHashedPassword = await bcrypt.hash(oldPassword, salt);
+    const isValid = await bcrypt.compare(oldPassword, user.password);
+    if (!isValid) {
+      const error = new CustomError("Credentials are incorrect!", 403);
+      throw error;
+    }
+    const isEqual = await bcrypt.compare(newPassword, oldHashedPassword);
+    if (isEqual) {
+      const error = new CustomError("Old password is same as new password!", 403);
+      throw error;
+    }
+    const newHashedPassword = await bcrypt.hash(newPassword, salt);
+    user.password = newHashedPassword;
+    await user.save()
+    res.status(200).json(user)
+  } catch (err: any) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err)
+  }
+
+
 }
 
 

@@ -8,6 +8,10 @@ const is_auth_1 = __importDefault(require("../middlewares/is-auth"));
 const express_validator_1 = require("express-validator");
 const users_1 = require("./../controllers/users");
 const router = express_1.default.Router();
+router.put("/update-password", is_auth_1.default, [
+    (0, express_validator_1.body)("oldPassword").isLength({ min: 6 }),
+    (0, express_validator_1.body)("newPassword").isLength({ min: 6 }),
+], users_1.changePassword);
 router.put('/:id', is_auth_1.default, [
     (0, express_validator_1.body)("email")
         //.notEmpty()
