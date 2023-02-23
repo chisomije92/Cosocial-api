@@ -8,10 +8,12 @@ const express_1 = __importDefault(require("express"));
 const is_auth_1 = __importDefault(require("../middlewares/is-auth"));
 const router = express_1.default.Router();
 router.post('/', is_auth_1.default, posts_1.createPosts);
+router.get("/bookmark", is_auth_1.default, posts_1.getAllBookmarks);
 router.put("/:id", is_auth_1.default, posts_1.updatePost);
 router.delete("/:id", is_auth_1.default, posts_1.deletePost);
 router.get("/:id", is_auth_1.default, posts_1.getPost);
 router.put("/:id/like", is_auth_1.default, posts_1.likePost);
 router.get("/:id/timeline", is_auth_1.default, posts_1.getPostsOnTL);
+router.put("/:id/bookmark", is_auth_1.default, posts_1.bookmarkPost);
 exports.default = router;
 //# sourceMappingURL=posts.js.map

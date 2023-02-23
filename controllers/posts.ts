@@ -1,7 +1,10 @@
+import { Types } from 'mongoose';
+import { Mongoose } from 'mongoose';
 import { CustomError } from './../error-model/custom-error';
 import Posts from "../models/posts";
 import { Request, Response, NextFunction } from "express";
-import User from "../models/user";
+import Users from "../models/user";
+
 
 export const createPosts = async (req: Request, res: Response, next: NextFunction) => {
 
@@ -76,8 +79,8 @@ export const likePost = async (req: Request, res: Response, next: NextFunction) 
       throw error;
     }
     if (req.userId) {
-      if (!post?.likes.includes(req.userId)) {
-        await post?.updateOne({ $push: { likes: req.userId } })
+      if (!post.likes.includes(req.userId)) {
+        await post.updateOne({ $push: { likes: req.userId } })
         res.status(200).json("User liked post!")
 
       } else {
@@ -111,7 +114,7 @@ export const getPost = async (req: Request, res: Response, next: NextFunction) =
 
 export const getPostsOnTL = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const currentUser = await User.findById(req.params.id)
+    const currentUser = await Users.findById(req.params.id)
     const userPosts = await Posts.find({ userId: currentUser?._id })
     if (!currentUser) {
       const error = new CustomError("User not found!", 404);
@@ -129,4 +132,51 @@ export const getPostsOnTL = async (req: Request, res: Response, next: NextFuncti
     next(err)
   }
 
+}
+
+export const bookmarkPost = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const post = await Posts.findById(req.params.id)
+    if (!post) {
+      const error = new CustomError("Post not found!", 404);
+      throw error;
+    }
+    const currentUser = await Users.findById(req.userId)
+    if (!currentUser) {
+      const error = new CustomError("User not found!", 404);
+      throw error;
+    }
+    if (!currentUser.bookmarks.includes(post.id)) {
+      await currentUser.updateOne({ $push: { bookmarks: post.id } })
+      res.status(200).json("Added to bookmarks")
+    } else {
+      await currentUser.updateOne({ $pull: { bookmarks: post.id } })
+      res.status(403).json("Removed from bookmarks")
+    }
+
+  }
+  catch (err: any) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err)
+  }
+}
+
+export const getAllBookmarks = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const user = await Users.findById(req.userId).populate("bookmarks")
+    if (!user) {
+      const error = new CustomError("User not found!", 404);
+      throw error;
+    }
+
+    res.status(200).json(user["bookmarks"])
+
+  } catch (err: any) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err)
+  }
 }
