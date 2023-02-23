@@ -11,7 +11,7 @@ const auth_2 = require("./../controllers/auth");
 const router = express_1.default.Router();
 router.post("/sign-up", [
     (0, express_validator_1.body)("username").trim().isLength({ min: 4 }),
-    (0, express_validator_1.body)("email").isEmail().normalizeEmail(),
+    (0, express_validator_1.body)("email").isEmail().normalizeEmail().isLength({ max: 50 }),
     (0, express_validator_1.body)("password").isLength({ min: 6 }),
 ], auth_1.registerUser);
 router.post("/login", [

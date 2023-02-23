@@ -12,9 +12,7 @@ router.put("/update-password", isAuth, [
 ], changePassword)
 router.put('/:id', isAuth, [
   body("email")
-    //.notEmpty()
     .optional()
-    //exists({ checkFalsy: true, checkNull: true })
     .isEmail(),
   body("username").trim().isLength({ min: 4 })
     .optional({ nullable: true, checkFalsy: true })

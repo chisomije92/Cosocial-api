@@ -12,7 +12,7 @@ router.post(
   "/sign-up",
   [
     body("username").trim().isLength({ min: 4 }),
-    body("email").isEmail().normalizeEmail(),
+    body("email").isEmail().normalizeEmail().isLength({ max: 50 }),
     body("password").isLength({ min: 6 }),
   ],
   registerUser

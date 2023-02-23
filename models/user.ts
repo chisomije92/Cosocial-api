@@ -1,3 +1,4 @@
+
 /** @format */
 
 import mongoose, { Types } from "mongoose";
@@ -10,7 +11,6 @@ export interface UserType extends mongoose.Document {
   email: string;
   password: string;
   profilePicture: string;
-  coverPicture: string;
   followers: string[];
   following: string[];
   isAdmin: boolean;
@@ -18,7 +18,7 @@ export interface UserType extends mongoose.Document {
   city: string;
   from: string;
   relationship: Number
-
+  bookmarks: Types.ObjectId[]
 }
 
 const UserSchema = new Schema<UserType>({
@@ -44,11 +44,6 @@ const UserSchema = new Schema<UserType>({
     type: String,
     default: "",
   },
-  coverPicture: {
-    type: String,
-    default: "",
-  },
-
   followers: {
     type: [String],
     default: [],
@@ -82,7 +77,13 @@ const UserSchema = new Schema<UserType>({
     type: Number,
     enum: [1, 2, 3],
     default: 1
-  }
+  },
+  bookmarks: [
+    {
+      type: Types.ObjectId,
+      ref: "Posts"
+    }
+  ]
 },
   { timestamps: true }
 );

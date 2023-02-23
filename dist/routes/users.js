@@ -14,9 +14,7 @@ router.put("/update-password", is_auth_1.default, [
 ], users_1.changePassword);
 router.put('/:id', is_auth_1.default, [
     (0, express_validator_1.body)("email")
-        //.notEmpty()
         .optional()
-        //exists({ checkFalsy: true, checkNull: true })
         .isEmail(),
     (0, express_validator_1.body)("username").trim().isLength({ min: 4 })
         .optional({ nullable: true, checkFalsy: true }),
