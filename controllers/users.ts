@@ -112,22 +112,31 @@ export const followUser = async (req: Request, res: Response, next: NextFunction
   if (req.userId !== req.params.id) {
     try {
 
-      const user = await User.findById(req.params.id)
+      const userToBeFollowed = await User.findById(req.params.id)
       const currentUser = await User.findById(req.userId)
       if (!currentUser) {
         const error = new CustomError("User not found!", 403);
         throw error;
       }
-      if (!user) {
+      if (!userToBeFollowed) {
         const error = new CustomError("You cannot follow a non-existing user!", 403);
         throw error;
       }
 
 
       if (req.userId) {
-        if (!user.followers.includes(req.userId) && currentUser) {
-          await user.updateOne({ $push: { followers: req.userId } })
+        if (!userToBeFollowed.followers.includes(req.userId) && currentUser) {
+          await userToBeFollowed.updateOne({ $push: { followers: req.userId } })
           await currentUser.updateOne({ $push: { following: req.params.id } })
+          await userToBeFollowed.updateOne({
+            $push: {
+              notifications: {
+                actions: `${currentUser.username} followed you`,
+                read: false,
+                dateOfAction: new Date().toISOString()
+              }
+            }
+          })
           res.status(200).json('User has been followed')
         } else {
           const error = new CustomError("You already follow this user!", 403);
@@ -152,21 +161,21 @@ export const unFollowUser = async (req: Request, res: Response, next: NextFuncti
   const { userId } = req
   if (userId !== req.params.id) {
     try {
-      const user = await User.findById(req.params.id)
+      const userToBeUnFollowed = await User.findById(req.params.id)
       const currentUser = await User.findById(userId)
       if (!currentUser) {
         const error = new CustomError("User not found!", 403);
         throw error;
       }
-      if (!user) {
+      if (!userToBeUnFollowed) {
         const error = new CustomError("Can not unfollow a non-existing user!", 403);
         throw error;
       }
 
       if (userId) {
-        if (user.followers.includes(userId) && currentUser) {
+        if (userToBeUnFollowed.followers.includes(userId) && currentUser) {
 
-          await user.updateOne({ $pull: { followers: userId } })
+          await userToBeUnFollowed.updateOne({ $pull: { followers: userId } })
           await currentUser.updateOne({ $pull: { following: req.params.id } })
           return res.status(200).json('You have stopped following this user')
         } else {
@@ -187,4 +196,22 @@ export const unFollowUser = async (req: Request, res: Response, next: NextFuncti
     const error = new CustomError("You are not allowed to unfollow yourself!", 403);
     next(error);
   }
+}
+
+export const getNotifications = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const user = await User.findById(req.userId)
+    if (!user) {
+      const error = new CustomError("User not found!", 403);
+      throw error
+    }
+    res.status(200).json(user.notifications)
+  } catch (err: any) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err)
+  }
+
+
 }

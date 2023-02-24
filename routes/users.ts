@@ -2,14 +2,16 @@ import express from "express"
 import isAuth from "../middlewares/is-auth";
 import { body } from "express-validator";
 
-import { deleteUser, updateUser, getUser, followUser, unFollowUser, changePassword } from './../controllers/users';
+import { deleteUser, updateUser, getUser, followUser, unFollowUser, changePassword, getNotifications } from './../controllers/users';
 
 
 const router = express.Router()
+router.get("/notifications", isAuth, getNotifications)
 router.put("/update-password", isAuth, [
   body("oldPassword").isLength({ min: 6 }),
   body("newPassword").isLength({ min: 6 }),
 ], changePassword)
+
 router.put('/:id', isAuth, [
   body("email")
     .optional()

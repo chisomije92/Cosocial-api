@@ -83,9 +83,24 @@ const likePost = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
             const error = new custom_error_1.CustomError("Post not found!", 403);
             throw error;
         }
+        const targetUser = yield user_1.default.findById(post.userId);
+        if (!targetUser) {
+            const error = new custom_error_1.CustomError("User not found!", 404);
+            throw error;
+        }
         if (req.userId) {
+            const currentUser = yield user_1.default.findById(req.userId);
             if (!post.likes.includes(req.userId)) {
                 yield post.updateOne({ $push: { likes: req.userId } });
+                yield (targetUser === null || targetUser === void 0 ? void 0 : targetUser.updateOne({
+                    $push: {
+                        notifications: {
+                            actions: `${currentUser === null || currentUser === void 0 ? void 0 : currentUser.username} liked your post`,
+                            read: false,
+                            dateOfAction: new Date().toISOString()
+                        }
+                    }
+                }));
                 res.status(200).json("User liked post!");
             }
             else {

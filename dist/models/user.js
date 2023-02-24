@@ -86,6 +86,13 @@ const UserSchema = new Schema({
             type: mongoose_1.Types.ObjectId,
             ref: "Posts"
         }
+    ],
+    notifications: [
+        {
+            actions: { type: String },
+            read: { type: Boolean },
+            dateOfAction: { type: String }
+        }
     ]
 }, { timestamps: true });
 exports.default = model("Users", UserSchema);

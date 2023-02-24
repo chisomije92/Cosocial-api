@@ -23,7 +23,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.unFollowUser = exports.followUser = exports.getUser = exports.deleteUser = exports.changePassword = exports.updateUser = void 0;
+exports.getNotifications = exports.unFollowUser = exports.followUser = exports.getUser = exports.deleteUser = exports.changePassword = exports.updateUser = void 0;
 const validation_result_1 = require("express-validator/src/validation-result");
 const custom_error_1 = require("./../error-model/custom-error");
 const user_1 = __importDefault(require("../models/user"));
@@ -130,20 +130,29 @@ exports.getUser = getUser;
 const followUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     if (req.userId !== req.params.id) {
         try {
-            const user = yield user_1.default.findById(req.params.id);
+            const userToBeFollowed = yield user_1.default.findById(req.params.id);
             const currentUser = yield user_1.default.findById(req.userId);
             if (!currentUser) {
                 const error = new custom_error_1.CustomError("User not found!", 403);
                 throw error;
             }
-            if (!user) {
+            if (!userToBeFollowed) {
                 const error = new custom_error_1.CustomError("You cannot follow a non-existing user!", 403);
                 throw error;
             }
             if (req.userId) {
-                if (!user.followers.includes(req.userId) && currentUser) {
-                    yield user.updateOne({ $push: { followers: req.userId } });
+                if (!userToBeFollowed.followers.includes(req.userId) && currentUser) {
+                    yield userToBeFollowed.updateOne({ $push: { followers: req.userId } });
                     yield currentUser.updateOne({ $push: { following: req.params.id } });
+                    yield userToBeFollowed.updateOne({
+                        $push: {
+                            notifications: {
+                                actions: `${currentUser.username} followed you`,
+                                read: false,
+                                dateOfAction: new Date().toISOString()
+                            }
+                        }
+                    });
                     res.status(200).json('User has been followed');
                 }
                 else {
@@ -169,19 +178,19 @@ const unFollowUser = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
     const { userId } = req;
     if (userId !== req.params.id) {
         try {
-            const user = yield user_1.default.findById(req.params.id);
+            const userToBeUnFollowed = yield user_1.default.findById(req.params.id);
             const currentUser = yield user_1.default.findById(userId);
             if (!currentUser) {
                 const error = new custom_error_1.CustomError("User not found!", 403);
                 throw error;
             }
-            if (!user) {
+            if (!userToBeUnFollowed) {
                 const error = new custom_error_1.CustomError("Can not unfollow a non-existing user!", 403);
                 throw error;
             }
             if (userId) {
-                if (user.followers.includes(userId) && currentUser) {
-                    yield user.updateOne({ $pull: { followers: userId } });
+                if (userToBeUnFollowed.followers.includes(userId) && currentUser) {
+                    yield userToBeUnFollowed.updateOne({ $pull: { followers: userId } });
                     yield currentUser.updateOne({ $pull: { following: req.params.id } });
                     return res.status(200).json('You have stopped following this user');
                 }
@@ -204,4 +213,21 @@ const unFollowUser = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
     }
 });
 exports.unFollowUser = unFollowUser;
+const getNotifications = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const user = yield user_1.default.findById(req.userId);
+        if (!user) {
+            const error = new custom_error_1.CustomError("User not found!", 403);
+            throw error;
+        }
+        res.status(200).json(user.notifications);
+    }
+    catch (err) {
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
+    }
+});
+exports.getNotifications = getNotifications;
 //# sourceMappingURL=users.js.map

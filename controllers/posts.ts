@@ -1,5 +1,4 @@
-import { Types } from 'mongoose';
-import { Mongoose } from 'mongoose';
+
 import { CustomError } from './../error-model/custom-error';
 import Posts from "../models/posts";
 import { Request, Response, NextFunction } from "express";
@@ -74,13 +73,29 @@ export const likePost = async (req: Request, res: Response, next: NextFunction) 
 
   try {
     const post = await Posts.findById(req.params.id)
+
     if (!post) {
       const error = new CustomError("Post not found!", 403);
       throw error;
     }
+    const targetUser = await Users.findById(post.userId)
+    if (!targetUser) {
+      const error = new CustomError("User not found!", 404);
+      throw error;
+    }
     if (req.userId) {
+      const currentUser = await Users.findById(req.userId)
       if (!post.likes.includes(req.userId)) {
         await post.updateOne({ $push: { likes: req.userId } })
+        await targetUser?.updateOne({
+          $push: {
+            notifications: {
+              actions: `${currentUser?.username} liked your post`,
+              read: false,
+              dateOfAction: new Date().toISOString()
+            }
+          }
+        })
         res.status(200).json("User liked post!")
 
       } else {
