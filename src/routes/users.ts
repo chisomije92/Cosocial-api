@@ -1,8 +1,8 @@
 import express from "express"
-import isAuth from "../middlewares/is-auth";
+import isAuth from "../middlewares/is-auth.js";
 import { body } from "express-validator";
 
-import { deleteUser, updateUser, getUser, followUser, unFollowUser, changePassword, getNotifications } from './../controllers/users';
+import { deleteUser, updateUser, getUser, followUser, unFollowUser, changePassword, getNotifications } from './../controllers/users.js';
 
 
 const router = express.Router()

@@ -1,10 +1,14 @@
 import dotenv from 'dotenv';
-import { CustomError } from '../error-model/custom-error';
+import { CustomError } from '../error-model/custom-error.js';
 import { Request, Response, NextFunction } from "express";
-import User from "../models/user"
+import User from "../models/user.js"
 import bcrypt from "bcrypt"
-import { validationResult } from 'express-validator/src/validation-result';
-import { sign } from 'jsonwebtoken';
+import { validationResult } from 'express-validator/src/validation-result.js';
+//import { sign } from 'jsonwebtoken';
+//const { sign } = require("jsonwebtoken")
+import jsonwebtoken from "jsonwebtoken"
+
+const { sign } = jsonwebtoken
 
 dotenv.config()
 const { JWT_SECRET } = process.env

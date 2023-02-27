@@ -1,6 +1,6 @@
-import { createPosts, deletePost, updatePost, likePost, getPost, getPostsOnTL, bookmarkPost, getAllBookmarks } from './../controllers/posts';
+import { createPosts, deletePost, updatePost, likePost, getPost, getPostsOnTL, bookmarkPost, getAllBookmarks } from './../controllers/posts.js';
 import express from "express"
-import isAuth from '../middlewares/is-auth';
+import isAuth from '../middlewares/is-auth.js';
 
 
 const router = express.Router()

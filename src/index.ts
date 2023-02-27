@@ -1,18 +1,22 @@
 
 import express, { Request, Response, NextFunction } from "express"
 import mongoose from "mongoose"
-const helmet = require("helmet")
+//const helmet = require("helmet")
+import helmet from "helmet"
 import morgan from "morgan"
 import dotenv from "dotenv"
-import userRoute from "./routes/users"
-import authRoute from "./routes/auth"
-import postRoute from "./routes/posts"
+import userRoute from "./routes/users.js"
+import authRoute from "./routes/auth.js"
+import postRoute from "./routes/posts.js"
 import cors from 'cors';
 import { v4 as uuidv4 } from "uuid";
 import multer from "multer";
 import path from "path"
 
 const app = express()
+
+
+const __dirname = path.resolve();
 
 dotenv.config()
 

@@ -1,4 +1,4 @@
-import { CustomError } from './../error-model/custom-error';
+import { CustomError } from './../error-model/custom-error.js';
 import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
 import dotenv from "dotenv";

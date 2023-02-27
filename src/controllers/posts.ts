@@ -1,8 +1,8 @@
 
-import { CustomError } from './../error-model/custom-error';
-import Posts from "../models/posts";
+import { CustomError } from './../error-model/custom-error.js';
+import Posts from "../models/posts.js";
 import { Request, Response, NextFunction } from "express";
-import Users from "../models/user";
+import Users from "../models/user.js";
 
 
 

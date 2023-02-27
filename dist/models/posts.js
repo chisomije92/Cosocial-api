@@ -1,11 +1,6 @@
-"use strict";
 /** @format */
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const mongoose_1 = __importDefault(require("mongoose"));
-const { Schema, model } = mongoose_1.default;
+import mongoose from "mongoose";
+const { Schema, model } = mongoose;
 const PostSchema = new Schema({
     userId: {
         type: String,
@@ -23,5 +18,5 @@ const PostSchema = new Schema({
         default: []
     },
 }, { timestamps: true });
-exports.default = model("Posts", PostSchema);
+export default model("Posts", PostSchema);
 //# sourceMappingURL=posts.js.map

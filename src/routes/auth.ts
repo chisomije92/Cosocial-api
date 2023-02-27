@@ -3,8 +3,8 @@
 
 import express from "express";
 import { body } from "express-validator";
-import { registerUser } from "./../controllers/auth";
-import { loginUser } from "./../controllers/auth";
+import { registerUser } from "./../controllers/auth.js";
+import { loginUser } from "./../controllers/auth.js";
 
 const router = express.Router();
 

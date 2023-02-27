@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,21 +7,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAllBookmarks = exports.bookmarkPost = exports.getPostsOnTL = exports.getPost = exports.likePost = exports.deletePost = exports.updatePost = exports.createPosts = void 0;
-const custom_error_1 = require("./../error-model/custom-error");
-const posts_1 = __importDefault(require("../models/posts"));
-const user_1 = __importDefault(require("../models/user"));
-const createPosts = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+import { CustomError } from './../error-model/custom-error.js';
+import Posts from "../models/posts.js";
+import Users from "../models/user.js";
+export const createPosts = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     const image = (_a = req.file) === null || _a === void 0 ? void 0 : _a.path;
     const description = req.body.description;
     console.log(req.file);
     try {
-        const newPost = new posts_1.default({ description, image, userId: req.userId });
+        const newPost = new Posts({ description, image, userId: req.userId });
         const savedPost = yield newPost.save();
         res.status(200).json(savedPost);
     }
@@ -33,10 +27,9 @@ const createPosts = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
         next(err);
     }
 });
-exports.createPosts = createPosts;
-const updatePost = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+export const updatePost = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const post = yield posts_1.default.findById(req.params.id);
+        const post = yield Posts.findById(req.params.id);
         if ((post === null || post === void 0 ? void 0 : post.userId) === req.userId) {
             yield (post === null || post === void 0 ? void 0 : post.updateOne({
                 $set: req.body
@@ -44,7 +37,7 @@ const updatePost = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
             res.status(200).json("Post updated successfully");
         }
         else {
-            const error = new custom_error_1.CustomError("You can only update posts made by you!", 403);
+            const error = new CustomError("You can only update posts made by you!", 403);
             throw error;
         }
     }
@@ -55,12 +48,11 @@ const updatePost = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
         next(err);
     }
 });
-exports.updatePost = updatePost;
-const deletePost = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+export const deletePost = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const post = yield posts_1.default.findById(req.params.id);
+        const post = yield Posts.findById(req.params.id);
         if (!post) {
-            const error = new custom_error_1.CustomError("Post not found!", 403);
+            const error = new CustomError("Post not found!", 403);
             throw error;
         }
         if (post.userId === req.userId) {
@@ -68,7 +60,7 @@ const deletePost = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
             res.status(200).json("Post deleted successfully");
         }
         else {
-            const error = new custom_error_1.CustomError("You can only delete posts made by you!", 403);
+            const error = new CustomError("You can only delete posts made by you!", 403);
             throw error;
         }
     }
@@ -79,21 +71,20 @@ const deletePost = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
         next(err);
     }
 });
-exports.deletePost = deletePost;
-const likePost = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+export const likePost = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const post = yield posts_1.default.findById(req.params.id);
+        const post = yield Posts.findById(req.params.id);
         if (!post) {
-            const error = new custom_error_1.CustomError("Post not found!", 403);
+            const error = new CustomError("Post not found!", 403);
             throw error;
         }
-        const targetUser = yield user_1.default.findById(post.userId);
+        const targetUser = yield Users.findById(post.userId);
         if (!targetUser) {
-            const error = new custom_error_1.CustomError("User not found!", 404);
+            const error = new CustomError("User not found!", 404);
             throw error;
         }
         if (req.userId) {
-            const currentUser = yield user_1.default.findById(req.userId);
+            const currentUser = yield Users.findById(req.userId);
             if (!post.likes.includes(req.userId)) {
                 yield post.updateOne({ $push: { likes: req.userId } });
                 yield (targetUser === null || targetUser === void 0 ? void 0 : targetUser.updateOne({
@@ -120,10 +111,9 @@ const likePost = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
         next(err);
     }
 });
-exports.likePost = likePost;
-const getPost = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+export const getPost = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const post = yield posts_1.default.findById(req.params.id);
+        const post = yield Posts.findById(req.params.id);
         res.status(200).json(post);
     }
     catch (err) {
@@ -133,16 +123,15 @@ const getPost = (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
         next(err);
     }
 });
-exports.getPost = getPost;
-const getPostsOnTL = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+export const getPostsOnTL = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const currentUser = yield user_1.default.findById(req.params.id);
-        const userPosts = yield posts_1.default.find({ userId: currentUser === null || currentUser === void 0 ? void 0 : currentUser._id });
+        const currentUser = yield Users.findById(req.params.id);
+        const userPosts = yield Posts.find({ userId: currentUser === null || currentUser === void 0 ? void 0 : currentUser._id });
         if (!currentUser) {
-            const error = new custom_error_1.CustomError("User not found!", 404);
+            const error = new CustomError("User not found!", 404);
             throw error;
         }
-        const friendPosts = yield Promise.all(currentUser.following.map(friendId => { return posts_1.default.find({ userId: friendId }); }));
+        const friendPosts = yield Promise.all(currentUser.following.map(friendId => { return Posts.find({ userId: friendId }); }));
         res.status(200).json(userPosts.concat(...friendPosts));
     }
     catch (err) {
@@ -152,17 +141,16 @@ const getPostsOnTL = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
         next(err);
     }
 });
-exports.getPostsOnTL = getPostsOnTL;
-const bookmarkPost = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+export const bookmarkPost = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const post = yield posts_1.default.findById(req.params.id);
+        const post = yield Posts.findById(req.params.id);
         if (!post) {
-            const error = new custom_error_1.CustomError("Post not found!", 404);
+            const error = new CustomError("Post not found!", 404);
             throw error;
         }
-        const currentUser = yield user_1.default.findById(req.userId);
+        const currentUser = yield Users.findById(req.userId);
         if (!currentUser) {
-            const error = new custom_error_1.CustomError("User not found!", 404);
+            const error = new CustomError("User not found!", 404);
             throw error;
         }
         if (!currentUser.bookmarks.includes(post.id)) {
@@ -181,12 +169,11 @@ const bookmarkPost = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
         next(err);
     }
 });
-exports.bookmarkPost = bookmarkPost;
-const getAllBookmarks = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+export const getAllBookmarks = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const user = yield user_1.default.findById(req.userId).populate("bookmarks");
+        const user = yield Users.findById(req.userId).populate("bookmarks");
         if (!user) {
-            const error = new custom_error_1.CustomError("User not found!", 404);
+            const error = new CustomError("User not found!", 404);
             throw error;
         }
         res.status(200).json(user["bookmarks"]);
@@ -198,5 +185,4 @@ const getAllBookmarks = (req, res, next) => __awaiter(void 0, void 0, void 0, fu
         next(err);
     }
 });
-exports.getAllBookmarks = getAllBookmarks;
 //# sourceMappingURL=posts.js.map

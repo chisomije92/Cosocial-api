@@ -1,7 +1,7 @@
-import { validationResult } from 'express-validator/src/validation-result';
-import { CustomError } from './../error-model/custom-error';
+import { validationResult } from 'express-validator/src/validation-result.js';
+import { CustomError } from './../error-model/custom-error.js';
 import { Request, Response, NextFunction } from "express";
-import User from "../models/user"
+import User from "../models/user.js"
 import bcrypt from "bcrypt"
 
 export const updateUser = async (req: Request, res: Response, next: NextFunction) => {
@@ -97,7 +97,7 @@ export const deleteUser = async (req: Request, res: Response, next: NextFunction
 export const getUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = await User.findById(req.params.id)
-    const { password, updatedAt, isAdmin, __v, ...rest } = user!.toObject()
+    const { password, isAdmin, __v, ...rest } = user!.toObject()
     res.status(200).json(rest)
 
   } catch (err: any) {
