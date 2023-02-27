@@ -5,6 +5,7 @@ import { Request, Response, NextFunction } from "express";
 import Users from "../models/user";
 
 
+
 export const createPosts = async (req: Request, res: Response, next: NextFunction) => {
 
   const newPost = new Posts({ ...req.body, userId: req.userId })
