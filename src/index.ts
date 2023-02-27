@@ -57,6 +57,7 @@ const fileFilter = (
 app.use(cors<Request>())
 app.use(express.json())
 app.use("/images", express.static(path.join(__dirname, "images")));
+
 app.use(
   multer({
     storage: fileStorage,
@@ -67,6 +68,9 @@ app.use(helmet())
 app.use(morgan("common"))
 
 
+app.get("/", (req, res) => {
+  res.send("COSOCIAL API")
+})
 app.use("/api/users", userRoute)
 
 app.use("/api/auth", authRoute)

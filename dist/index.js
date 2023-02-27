@@ -47,6 +47,9 @@ app.use(multer({
 }).single("image"));
 app.use(helmet());
 app.use(morgan("common"));
+app.get("/", (req, res) => {
+    res.send("COSOCIAL API");
+});
 app.use("/api/users", userRoute);
 app.use("/api/auth", authRoute);
 app.use('/api/posts', postRoute);

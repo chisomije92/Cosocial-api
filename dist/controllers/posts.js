@@ -14,7 +14,6 @@ export const createPosts = (req, res, next) => __awaiter(void 0, void 0, void 0,
     var _a;
     const image = (_a = req.file) === null || _a === void 0 ? void 0 : _a.path;
     const description = req.body.description;
-    console.log(req.file);
     try {
         const newPost = new Posts({ description, image, userId: req.userId });
         const savedPost = yield newPost.save();

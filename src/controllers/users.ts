@@ -97,7 +97,10 @@ export const deleteUser = async (req: Request, res: Response, next: NextFunction
 export const getUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = await User.findById(req.params.id)
-    const { password, isAdmin, __v, ...rest } = user!.toObject()
+    if (!user) {
+      throw new CustomError("User not found", 404)
+    }
+    const { password, isAdmin, __v, ...rest } = user.toObject()
     res.status(200).json(rest)
 
   } catch (err: any) {

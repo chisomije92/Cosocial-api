@@ -107,6 +107,9 @@ export const deleteUser = (req, res, next) => __awaiter(void 0, void 0, void 0, 
 export const getUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const user = yield User.findById(req.params.id);
+        if (!user) {
+            throw new CustomError("User not found", 404);
+        }
         const _a = user.toObject(), { password, isAdmin, __v } = _a, rest = __rest(_a, ["password", "isAdmin", "__v"]);
         res.status(200).json(rest);
     }
