@@ -8,7 +8,7 @@ export interface PostType extends mongoose.Document {
   _id?: Types.ObjectId;
   userId: string;
   description: string;
-  img: string;
+  image: string;
   likes: string[];
 
 
@@ -24,7 +24,7 @@ const PostSchema = new Schema<PostType>({
     max: 50,
   },
 
-  img: {
+  image: {
     type: String,
   },
   likes: {

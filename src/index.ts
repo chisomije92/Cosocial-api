@@ -8,6 +8,9 @@ import userRoute from "./routes/users"
 import authRoute from "./routes/auth"
 import postRoute from "./routes/posts"
 import cors from 'cors';
+import { v4 as uuidv4 } from "uuid";
+import multer from "multer";
+import path from "path"
 
 const app = express()
 
@@ -21,8 +24,41 @@ if (MONGO_URL) {
     .then(() => console.log("Connected to Mongo db"))
 }
 
+const fileStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "images");
+  },
+  filename: (req, file, cb) => {
+    cb(null, uuidv4() + "-" + file.originalname);
+  },
+});
+
+const fileFilter = (
+  req: Request,
+  file: Express.Multer.File,
+  cb: multer.FileFilterCallback
+) => {
+  if (
+    file.mimetype === "image/png" ||
+    file.mimetype === "image/jpg" ||
+    file.mimetype === "image/jpeg"
+  ) {
+    cb(null, true);
+  } else {
+    cb(null, false);
+  }
+};
+
+
 app.use(cors<Request>())
 app.use(express.json())
+app.use("/images", express.static(path.join(__dirname, "images")));
+app.use(
+  multer({
+    storage: fileStorage,
+    fileFilter: fileFilter,
+  }).single("image")
+);
 app.use(helmet())
 app.use(morgan("common"))
 

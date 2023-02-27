@@ -17,8 +17,12 @@ const custom_error_1 = require("./../error-model/custom-error");
 const posts_1 = __importDefault(require("../models/posts"));
 const user_1 = __importDefault(require("../models/user"));
 const createPosts = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const newPost = new posts_1.default(Object.assign(Object.assign({}, req.body), { userId: req.userId }));
+    var _a;
+    const image = (_a = req.file) === null || _a === void 0 ? void 0 : _a.path;
+    const description = req.body.description;
+    console.log(req.file);
     try {
+        const newPost = new posts_1.default({ description, image, userId: req.userId });
         const savedPost = yield newPost.save();
         res.status(200).json(savedPost);
     }

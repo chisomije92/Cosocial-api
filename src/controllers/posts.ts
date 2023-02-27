@@ -7,10 +7,13 @@ import Users from "../models/user";
 
 
 export const createPosts = async (req: Request, res: Response, next: NextFunction) => {
+  const image = req.file?.path;
 
-  const newPost = new Posts({ ...req.body, userId: req.userId })
+  const description: string = req.body.description;
 
+  console.log(req.file)
   try {
+    const newPost = new Posts({ description, image, userId: req.userId })
     const savedPost = await newPost.save()
     res.status(200).json(savedPost)
   } catch (err: any) {
