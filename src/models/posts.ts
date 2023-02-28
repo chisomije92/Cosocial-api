@@ -10,7 +10,8 @@ export interface PostType extends mongoose.Document {
   description: string;
   image: string;
   likes: string[];
-
+  updatedAt: string;
+  createdAt: string
 
 }
 

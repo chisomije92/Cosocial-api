@@ -23,7 +23,9 @@ export interface UserType extends mongoose.Document {
     actions: string;
     read: boolean;
     dateOfAction: string
-  }[]
+  }[];
+  updatedAt: string;
+  createdAt: string
 }
 
 const UserSchema = new Schema<UserType>({
