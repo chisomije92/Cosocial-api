@@ -7,9 +7,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+import { join, resolve } from 'path';
 import { CustomError } from './../error-model/custom-error.js';
 import Posts from "../models/posts.js";
 import Users from "../models/user.js";
+import { unlink } from 'fs';
+const __dirname = resolve();
 export const createPosts = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     const image = (_a = req.file) === null || _a === void 0 ? void 0 : _a.path;
@@ -27,12 +30,21 @@ export const createPosts = (req, res, next) => __awaiter(void 0, void 0, void 0,
     }
 });
 export const updatePost = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _b;
+    const updatedDescription = req.body.description;
+    const updatedImage = (_b = req.file) === null || _b === void 0 ? void 0 : _b.path;
     try {
         const post = yield Posts.findById(req.params.id);
-        if ((post === null || post === void 0 ? void 0 : post.userId) === req.userId) {
-            yield (post === null || post === void 0 ? void 0 : post.updateOne({
-                $set: req.body
-            }));
+        if (!post) {
+            throw new CustomError("Post not found", 404);
+        }
+        if (post.userId === req.userId) {
+            post.description = updatedDescription;
+            if (updatedImage !== post.image && updatedImage) {
+                clearImage(post.image);
+                post.image = updatedImage;
+            }
+            yield post.save();
             res.status(200).json("Post updated successfully");
         }
         else {
@@ -51,10 +63,11 @@ export const deletePost = (req, res, next) => __awaiter(void 0, void 0, void 0, 
     try {
         const post = yield Posts.findById(req.params.id);
         if (!post) {
-            const error = new CustomError("Post not found!", 403);
+            const error = new CustomError("Post not found!", 404);
             throw error;
         }
         if (post.userId === req.userId) {
+            clearImage(post.image);
             yield (post === null || post === void 0 ? void 0 : post.deleteOne());
             res.status(200).json("Post deleted successfully");
         }
@@ -74,7 +87,7 @@ export const likePost = (req, res, next) => __awaiter(void 0, void 0, void 0, fu
     try {
         const post = yield Posts.findById(req.params.id);
         if (!post) {
-            const error = new CustomError("Post not found!", 403);
+            const error = new CustomError("Post not found!", 404);
             throw error;
         }
         const targetUser = yield Users.findById(post.userId);
@@ -113,6 +126,10 @@ export const likePost = (req, res, next) => __awaiter(void 0, void 0, void 0, fu
 export const getPost = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const post = yield Posts.findById(req.params.id);
+        if (!post) {
+            const error = new CustomError("Post not found!", 404);
+            throw error;
+        }
         res.status(200).json(post);
     }
     catch (err) {
@@ -184,4 +201,11 @@ export const getAllBookmarks = (req, res, next) => __awaiter(void 0, void 0, voi
         next(err);
     }
 });
+const clearImage = (imagePath) => {
+    imagePath = join(__dirname, imagePath);
+    unlink(imagePath, (err) => {
+        if (err)
+            console.log(err);
+    });
+};
 //# sourceMappingURL=posts.js.map

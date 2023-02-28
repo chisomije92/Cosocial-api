@@ -1,11 +1,13 @@
+import { join, resolve } from 'path';
 
 import { CustomError } from './../error-model/custom-error.js';
 import Posts from "../models/posts.js";
 import { Request, Response, NextFunction } from "express";
 import Users from "../models/user.js";
+import { unlink } from 'fs';
 
 
-
+const __dirname = resolve()
 export const createPosts = async (req: Request, res: Response, next: NextFunction) => {
   const image = req.file?.path;
   const description: string = req.body.description;
@@ -23,13 +25,23 @@ export const createPosts = async (req: Request, res: Response, next: NextFunctio
 }
 
 export const updatePost = async (req: Request, res: Response, next: NextFunction) => {
-
+  const updatedDescription = req.body.description
+  const updatedImage = req.file?.path;
   try {
     const post = await Posts.findById(req.params.id)
-    if (post?.userId === req.userId) {
-      await post?.updateOne({
-        $set: req.body
-      })
+    if (!post) {
+      throw new CustomError("Post not found", 404)
+    }
+    if (post.userId === req.userId) {
+
+      post.description = updatedDescription
+
+      if (updatedImage !== post.image && updatedImage) {
+        clearImage(post.image)
+        post.image = updatedImage
+      }
+      await post.save()
+
       res.status(200).json("Post updated successfully")
 
     } else {
@@ -50,10 +62,11 @@ export const deletePost = async (req: Request, res: Response, next: NextFunction
   try {
     const post = await Posts.findById(req.params.id)
     if (!post) {
-      const error = new CustomError("Post not found!", 403);
+      const error = new CustomError("Post not found!", 404);
       throw error;
     }
     if (post.userId === req.userId) {
+      clearImage(post.image)
       await post?.deleteOne()
       res.status(200).json("Post deleted successfully")
 
@@ -76,7 +89,7 @@ export const likePost = async (req: Request, res: Response, next: NextFunction) 
     const post = await Posts.findById(req.params.id)
 
     if (!post) {
-      const error = new CustomError("Post not found!", 403);
+      const error = new CustomError("Post not found!", 404);
       throw error;
     }
     const targetUser = await Users.findById(post.userId)
@@ -117,6 +130,10 @@ export const likePost = async (req: Request, res: Response, next: NextFunction) 
 export const getPost = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const post = await Posts.findById(req.params.id)
+    if (!post) {
+      const error = new CustomError("Post not found!", 404);
+      throw error;
+    }
     res.status(200).json(post)
 
   } catch (err: any) {
@@ -196,3 +213,11 @@ export const getAllBookmarks = async (req: Request, res: Response, next: NextFun
     next(err)
   }
 }
+
+const clearImage = (imagePath: string) => {
+  imagePath = join(__dirname, imagePath);
+  unlink(imagePath, (err) => {
+    if (err)
+      console.log(err)
+  });
+};
