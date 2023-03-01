@@ -157,6 +157,18 @@ export const getPostsOnTL = (req, res, next) => __awaiter(void 0, void 0, void 0
         next(err);
     }
 });
+export const getPostsOnExplore = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const posts = yield Posts.find();
+        res.status(200).json(posts);
+    }
+    catch (err) {
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
+    }
+});
 export const bookmarkPost = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const post = yield Posts.findById(req.params.id);

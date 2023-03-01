@@ -17,6 +17,14 @@ const PostSchema = new Schema({
         type: [String],
         default: []
     },
+    comments: {
+        type: [{
+                post: String,
+                commenterId: String,
+                dateOfReply: String,
+            }],
+        default: []
+    }
 }, { timestamps: true });
 export default model("Posts", PostSchema);
 //# sourceMappingURL=posts.js.map

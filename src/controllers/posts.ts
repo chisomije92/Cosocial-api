@@ -167,6 +167,20 @@ export const getPostsOnTL = async (req: Request, res: Response, next: NextFuncti
 
 }
 
+export const getPostsOnExplore = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const posts = await Posts.find()
+    res.status(200).json(posts)
+
+  } catch (err: any) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err)
+  }
+
+}
+
 export const bookmarkPost = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const post = await Posts.findById(req.params.id)
