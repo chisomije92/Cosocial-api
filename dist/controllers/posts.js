@@ -213,6 +213,50 @@ export const getAllBookmarks = (req, res, next) => __awaiter(void 0, void 0, voi
         next(err);
     }
 });
+export const createComment = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const post = yield Posts.findById(req.params.id);
+        const currentUser = yield Users.findById(req.userId);
+        if (!currentUser) {
+            throw new CustomError("User not found", 404);
+        }
+        yield (post === null || post === void 0 ? void 0 : post.updateOne({
+            $push: {
+                replies: {
+                    reply: req.body.reply,
+                    dateOfReply: new Date().toISOString(),
+                    commenterId: currentUser.id,
+                    likes: []
+                }
+            }
+        }));
+    }
+    catch (err) {
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
+    }
+});
+const likeComment = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const post = yield Posts.findById(req.params.id);
+        if (!post) {
+            throw new CustomError("User not found", 404);
+        }
+        const currentUser = yield Users.findById(req.userId);
+        if (!currentUser) {
+            throw new CustomError("User not found", 404);
+        }
+        //const reply = post.comments.find()
+    }
+    catch (err) {
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
+    }
+});
 const clearImage = (imagePath) => {
     imagePath = join(__dirname, imagePath);
     unlink(imagePath, (err) => {

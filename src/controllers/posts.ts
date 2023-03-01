@@ -228,6 +228,55 @@ export const getAllBookmarks = async (req: Request, res: Response, next: NextFun
   }
 }
 
+export const createComment = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const post = await Posts.findById(req.params.id)
+    const currentUser = await Users.findById(req.userId)
+    if (!currentUser) {
+      throw new CustomError("User not found", 404)
+    }
+    await post?.updateOne({
+      $push: {
+        replies: {
+          reply: req.body.reply,
+          dateOfReply: new Date().toISOString(),
+          commenterId: currentUser.id,
+          likes: []
+
+        }
+      }
+    })
+
+  } catch (err: any) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err)
+  }
+
+}
+
+const likeComment = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const post = await Posts.findById(req.params.id)
+    if (!post) {
+      throw new CustomError("User not found", 404)
+    }
+    const currentUser = await Users.findById(req.userId)
+    if (!currentUser) {
+      throw new CustomError("User not found", 404)
+    }
+    //const reply = post.comments.find()
+  } catch (err: any) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err)
+  }
+
+
+}
+
 const clearImage = (imagePath: string) => {
   imagePath = join(__dirname, imagePath);
   unlink(imagePath, (err) => {

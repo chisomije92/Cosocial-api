@@ -19,9 +19,10 @@ const PostSchema = new Schema({
     },
     comments: {
         type: [{
-                post: String,
+                reply: String,
                 commenterId: String,
                 dateOfReply: String,
+                likes: [String],
             }],
         default: []
     }
