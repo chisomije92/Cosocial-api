@@ -101,15 +101,18 @@ export const likePost = async (req: Request, res: Response, next: NextFunction) 
       const currentUser = await Users.findById(req.userId)
       if (!post.likes.includes(req.userId)) {
         await post.updateOne({ $push: { likes: req.userId } })
-        await targetUser?.updateOne({
-          $push: {
-            notifications: {
-              actions: `${currentUser?.username} liked your post`,
-              read: false,
-              dateOfAction: new Date().toISOString()
+        if (targetUser.id !== req.userId) {
+          await targetUser.updateOne({
+            $push: {
+              notifications: {
+                actions: `${currentUser?.username} liked your post`,
+                read: false,
+                dateOfAction: new Date().toISOString()
+              }
             }
-          }
-        })
+          })
+        }
+
         res.status(200).json("User liked post!")
 
       } else {
@@ -231,14 +234,17 @@ export const getAllBookmarks = async (req: Request, res: Response, next: NextFun
 export const createComment = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const post = await Posts.findById(req.params.id)
+    if (!post) {
+      throw new CustomError("Post not found", 404)
+    }
     const currentUser = await Users.findById(req.userId)
     if (!currentUser) {
       throw new CustomError("User not found", 404)
     }
     await post?.updateOne({
       $push: {
-        replies: {
-          reply: req.body.reply,
+        comments: {
+          comment: req.body.comment,
           dateOfReply: new Date().toISOString(),
           commenterId: currentUser.id,
           likes: []
@@ -246,7 +252,7 @@ export const createComment = async (req: Request, res: Response, next: NextFunct
         }
       }
     })
-
+    res.status(200).json("You made a comment")
   } catch (err: any) {
     if (!err.statusCode) {
       err.statusCode = 500;
@@ -256,17 +262,61 @@ export const createComment = async (req: Request, res: Response, next: NextFunct
 
 }
 
-const likeComment = async (req: Request, res: Response, next: NextFunction) => {
+export const likeComment = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const post = await Posts.findById(req.params.id)
     if (!post) {
-      throw new CustomError("User not found", 404)
+      throw new CustomError("Post not found", 404)
     }
     const currentUser = await Users.findById(req.userId)
-    if (!currentUser) {
+
+    if (!req.userId || !currentUser) {
       throw new CustomError("User not found", 404)
     }
-    //const reply = post.comments.find()
+    const reply = post.comments.find(p => p._id?.toString() === req.body.replyId)
+    if (!reply) {
+      throw new CustomError("Reply not found", 404)
+    }
+    const indexOfReply = post.comments.findIndex(p => p._id?.toString() === req.body.replyId)
+
+
+    if (!reply?.likes.includes(req.userId)) {
+      const likesInReply = reply.likes.concat(req.userId)
+      post.comments[indexOfReply].likes = likesInReply
+      const updatedComments = [...post.comments]
+      await post.updateOne({
+        $set: {
+          comments: updatedComments
+        }
+      })
+
+
+      const targetUser = await Users.findById(reply.commenterId)
+      if (targetUser?.id !== req.userId && targetUser) {
+        await targetUser.updateOne({
+          $push: {
+            notifications: {
+              actions: `${currentUser?.username} liked your post`,
+              read: false,
+              dateOfAction: new Date().toISOString()
+            }
+          }
+        })
+      }
+      res.status(200).json("User liked comment!")
+    }
+    else {
+      const likesInReply = reply.likes.filter(id => id !== req.userId)
+      post.comments[indexOfReply].likes = likesInReply
+      const updatedComments = [...post.comments]
+
+      await post.updateOne({
+        $set: {
+          comments: updatedComments
+        }
+      })
+      res.status(403).json("Like removed from comment")
+    }
   } catch (err: any) {
     if (!err.statusCode) {
       err.statusCode = 500;

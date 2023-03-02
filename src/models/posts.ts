@@ -5,6 +5,7 @@ import mongoose, { Types } from "mongoose";
 const { Schema, model } = mongoose;
 
 interface Reply {
+  _id?: Types.ObjectId;
   comment: string;
   commenterId: string
   dateOfReply: string
@@ -42,7 +43,7 @@ const PostSchema = new Schema<PostType>({
   },
   comments: {
     type: [{
-      reply: String,
+      comment: String,
       commenterId: String,
       dateOfReply: String,
       likes: [String],

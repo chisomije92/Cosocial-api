@@ -99,15 +99,17 @@ export const likePost = (req, res, next) => __awaiter(void 0, void 0, void 0, fu
             const currentUser = yield Users.findById(req.userId);
             if (!post.likes.includes(req.userId)) {
                 yield post.updateOne({ $push: { likes: req.userId } });
-                yield (targetUser === null || targetUser === void 0 ? void 0 : targetUser.updateOne({
-                    $push: {
-                        notifications: {
-                            actions: `${currentUser === null || currentUser === void 0 ? void 0 : currentUser.username} liked your post`,
-                            read: false,
-                            dateOfAction: new Date().toISOString()
+                if (targetUser.id !== req.userId) {
+                    yield targetUser.updateOne({
+                        $push: {
+                            notifications: {
+                                actions: `${currentUser === null || currentUser === void 0 ? void 0 : currentUser.username} liked your post`,
+                                read: false,
+                                dateOfAction: new Date().toISOString()
+                            }
                         }
-                    }
-                }));
+                    });
+                }
                 res.status(200).json("User liked post!");
             }
             else {
@@ -216,20 +218,24 @@ export const getAllBookmarks = (req, res, next) => __awaiter(void 0, void 0, voi
 export const createComment = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const post = yield Posts.findById(req.params.id);
+        if (!post) {
+            throw new CustomError("Post not found", 404);
+        }
         const currentUser = yield Users.findById(req.userId);
         if (!currentUser) {
             throw new CustomError("User not found", 404);
         }
         yield (post === null || post === void 0 ? void 0 : post.updateOne({
             $push: {
-                replies: {
-                    reply: req.body.reply,
+                comments: {
+                    comment: req.body.comment,
                     dateOfReply: new Date().toISOString(),
                     commenterId: currentUser.id,
                     likes: []
                 }
             }
         }));
+        res.status(200).json("You made a comment");
     }
     catch (err) {
         if (!err.statusCode) {
@@ -238,17 +244,55 @@ export const createComment = (req, res, next) => __awaiter(void 0, void 0, void 
         next(err);
     }
 });
-const likeComment = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+export const likeComment = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const post = yield Posts.findById(req.params.id);
         if (!post) {
-            throw new CustomError("User not found", 404);
+            throw new CustomError("Post not found", 404);
         }
         const currentUser = yield Users.findById(req.userId);
-        if (!currentUser) {
+        if (!req.userId || !currentUser) {
             throw new CustomError("User not found", 404);
         }
-        //const reply = post.comments.find()
+        const reply = post.comments.find(p => { var _a; return ((_a = p._id) === null || _a === void 0 ? void 0 : _a.toString()) === req.body.replyId; });
+        if (!reply) {
+            throw new CustomError("Reply not found", 404);
+        }
+        const indexOfReply = post.comments.findIndex(p => { var _a; return ((_a = p._id) === null || _a === void 0 ? void 0 : _a.toString()) === req.body.replyId; });
+        if (!(reply === null || reply === void 0 ? void 0 : reply.likes.includes(req.userId))) {
+            const likesInReply = reply.likes.concat(req.userId);
+            post.comments[indexOfReply].likes = likesInReply;
+            const updatedComments = [...post.comments];
+            yield post.updateOne({
+                $set: {
+                    comments: updatedComments
+                }
+            });
+            const targetUser = yield Users.findById(reply.commenterId);
+            if ((targetUser === null || targetUser === void 0 ? void 0 : targetUser.id) !== req.userId && targetUser) {
+                yield targetUser.updateOne({
+                    $push: {
+                        notifications: {
+                            actions: `${currentUser === null || currentUser === void 0 ? void 0 : currentUser.username} liked your post`,
+                            read: false,
+                            dateOfAction: new Date().toISOString()
+                        }
+                    }
+                });
+            }
+            res.status(200).json("User liked comment!");
+        }
+        else {
+            const likesInReply = reply.likes.filter(id => id !== req.userId);
+            post.comments[indexOfReply].likes = likesInReply;
+            const updatedComments = [...post.comments];
+            yield post.updateOne({
+                $set: {
+                    comments: updatedComments
+                }
+            });
+            res.status(403).json("Like removed from comment");
+        }
     }
     catch (err) {
         if (!err.statusCode) {

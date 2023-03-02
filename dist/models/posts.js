@@ -19,7 +19,7 @@ const PostSchema = new Schema({
     },
     comments: {
         type: [{
-                reply: String,
+                comment: String,
                 commenterId: String,
                 dateOfReply: String,
                 likes: [String],
