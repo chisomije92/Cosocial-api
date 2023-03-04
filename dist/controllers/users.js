@@ -22,8 +22,13 @@ import { validationResult } from 'express-validator/src/validation-result.js';
 import { CustomError } from './../error-model/custom-error.js';
 import User from "../models/user.js";
 import bcrypt from "bcrypt";
+import { join, resolve } from 'path';
+import { unlink } from 'fs';
+const __dirname = resolve();
 export const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const { password, isAdmin } = req.body;
+    var _a;
+    const { description, email, username, isAdmin } = req.body;
+    const image = (_a = req.file) === null || _a === void 0 ? void 0 : _a.path;
     const validationErrors = validationResult(req);
     if (!validationErrors.isEmpty()) {
         const error = new CustomError("Validation failed, entered data is incorrect", 422, validationErrors.array());
@@ -31,8 +36,16 @@ export const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, 
     }
     if (req.userId === req.params.id || isAdmin) {
         try {
-            const user = yield User.findByIdAndUpdate(req.userId, {
-                $set: req.body
+            const user = yield User.findById(req.userId);
+            if (!user) {
+                throw new CustomError("User not found!", 404);
+            }
+            if (image !== user.profilePicture && image) {
+                clearImage(user.profilePicture);
+                user.profilePicture = image;
+            }
+            yield User.findByIdAndUpdate(req.userId, {
+                $set: Object.assign(Object.assign({}, req.body), { profilePicture: image })
             });
             res.status(200).json("Account updated");
         }
@@ -90,6 +103,10 @@ export const deleteUser = (req, res, next) => __awaiter(void 0, void 0, void 0, 
     if (req.userId === req.params.id || isAdmin) {
         try {
             const user = yield User.findByIdAndDelete(req.userId);
+            if (!user) {
+                throw new CustomError("User not found!", 404);
+            }
+            clearImage(user.profilePicture);
             return res.status(200).json("Account deletion successful!");
         }
         catch (err) {
@@ -110,7 +127,7 @@ export const getUser = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
         if (!user) {
             throw new CustomError("User not found", 404);
         }
-        const _a = user.toObject(), { password, isAdmin, __v } = _a, rest = __rest(_a, ["password", "isAdmin", "__v"]);
+        const _b = user.toObject(), { password, isAdmin, __v } = _b, rest = __rest(_b, ["password", "isAdmin", "__v"]);
         res.status(200).json(rest);
     }
     catch (err) {
@@ -204,6 +221,48 @@ export const unFollowUser = (req, res, next) => __awaiter(void 0, void 0, void 0
         next(error);
     }
 });
+export const getFollowers = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { id, followers } = req.params;
+        const user = yield User.findById(id);
+        if (!user) {
+            const error = new CustomError("User not found!", 403);
+            throw error;
+        }
+        const createUserObj = (u) => {
+            return { id: u === null || u === void 0 ? void 0 : u._id, username: u === null || u === void 0 ? void 0 : u.username, description: u === null || u === void 0 ? void 0 : u.description, email: u === null || u === void 0 ? void 0 : u.email, followers: u === null || u === void 0 ? void 0 : u.followers, following: u === null || u === void 0 ? void 0 : u.following, profilePicture: u === null || u === void 0 ? void 0 : u.profilePicture };
+        };
+        const userFollowers = yield Promise.all(user.followers.map((id) => User.findById(id).then(u => (createUserObj(u)))));
+        res.status(200).json({ userFollowers });
+    }
+    catch (err) {
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
+    }
+});
+export const getFollowing = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { id, followers } = req.params;
+        const user = yield User.findById(id);
+        if (!user) {
+            const error = new CustomError("User not found!", 403);
+            throw error;
+        }
+        const createUserObj = (u) => {
+            return { id: u === null || u === void 0 ? void 0 : u._id, username: u === null || u === void 0 ? void 0 : u.username, description: u === null || u === void 0 ? void 0 : u.description, email: u === null || u === void 0 ? void 0 : u.email, followers: u === null || u === void 0 ? void 0 : u.followers, following: u === null || u === void 0 ? void 0 : u.following, profilePicture: u === null || u === void 0 ? void 0 : u.profilePicture };
+        };
+        const userFollowing = yield Promise.all(user.following.map((id) => User.findById(id).then(u => (createUserObj(u)))));
+        res.status(200).json({ userFollowing });
+    }
+    catch (err) {
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
+    }
+});
 export const getNotifications = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const user = yield User.findById(req.userId);
@@ -220,4 +279,11 @@ export const getNotifications = (req, res, next) => __awaiter(void 0, void 0, vo
         next(err);
     }
 });
+const clearImage = (imagePath) => {
+    imagePath = join(__dirname, imagePath);
+    unlink(imagePath, (err) => {
+        if (err)
+            console.log(err);
+    });
+};
 //# sourceMappingURL=users.js.map

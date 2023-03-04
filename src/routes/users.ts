@@ -2,7 +2,7 @@ import express from "express"
 import isAuth from "../middlewares/is-auth.js";
 import { body } from "express-validator";
 
-import { deleteUser, updateUser, getUser, followUser, unFollowUser, changePassword, getNotifications } from './../controllers/users.js';
+import { deleteUser, updateUser, getUser, followUser, unFollowUser, changePassword, getNotifications, getFollowers, getFollowing } from './../controllers/users.js';
 
 
 const router = express.Router()
@@ -27,6 +27,8 @@ router.delete('/:id', isAuth, deleteUser)
 router.get("/:id", isAuth, getUser)
 router.put("/:id/follow", isAuth, followUser)
 router.put("/:id/unfollow", isAuth, unFollowUser)
+router.get("/:id/followers", isAuth, getFollowers)
+router.get("/:id/following", isAuth, getFollowing)
 
 
 export default router

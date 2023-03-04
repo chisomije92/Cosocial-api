@@ -3,9 +3,18 @@ import { CustomError } from './../error-model/custom-error.js';
 import { Request, Response, NextFunction } from "express";
 import User from "../models/user.js"
 import bcrypt from "bcrypt"
+import { join, resolve } from 'path';
+import { unlink } from 'fs';
+
+
+
+const __dirname = resolve()
 
 export const updateUser = async (req: Request, res: Response, next: NextFunction) => {
-  const { password, isAdmin } = req.body
+  const { description, email, username, isAdmin } = req.body
+  const image = req.file?.path;
+
+
   const validationErrors = validationResult(req)
   if (!validationErrors.isEmpty()) {
     const error = new CustomError("Validation failed, entered data is incorrect", 422, validationErrors.array());
@@ -15,8 +24,20 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
   if (req.userId === req.params.id || isAdmin) {
 
     try {
-      const user = await User.findByIdAndUpdate(req.userId, {
-        $set: req.body
+      const user = await User.findById(req.userId)
+      if (!user) {
+        throw new CustomError("User not found!", 404)
+      }
+      if (image !== user.profilePicture && image) {
+        clearImage(user.profilePicture)
+        user.profilePicture = image
+      }
+
+      await User.findByIdAndUpdate(req.userId, {
+        $set: {
+          ...req.body,
+          profilePicture: image
+        }
       })
       res.status(200).json("Account updated")
     } catch (err: any) {
@@ -80,6 +101,10 @@ export const deleteUser = async (req: Request, res: Response, next: NextFunction
   if (req.userId === req.params.id || isAdmin) {
     try {
       const user = await User.findByIdAndDelete(req.userId)
+      if (!user) {
+        throw new CustomError("User not found!", 404)
+      }
+      clearImage(user.profilePicture)
       return res.status(200).json("Account deletion successful!")
     } catch (err: any) {
       if (!err.statusCode) {
@@ -201,6 +226,54 @@ export const unFollowUser = async (req: Request, res: Response, next: NextFuncti
   }
 }
 
+export const getFollowers = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+
+    const { id, followers } = req.params
+    const user = await User.findById(id)
+
+    if (!user) {
+      const error = new CustomError("User not found!", 403);
+      throw error
+    }
+    const createUserObj = (u: any) => {
+      return { id: u?._id, username: u?.username, description: u?.description, email: u?.email, followers: u?.followers, following: u?.following, profilePicture: u?.profilePicture }
+    }
+    const userFollowers = await Promise.all<any[]>(user.followers.map((id) => User.findById(id).then(u => (createUserObj(u)))))
+
+    res.status(200).json({ userFollowers })
+  } catch (err: any) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err)
+  }
+}
+
+export const getFollowing = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+
+    const { id, followers } = req.params
+    const user = await User.findById(id)
+
+    if (!user) {
+      const error = new CustomError("User not found!", 403);
+      throw error
+    }
+    const createUserObj = (u: any) => {
+      return { id: u?._id, username: u?.username, description: u?.description, email: u?.email, followers: u?.followers, following: u?.following, profilePicture: u?.profilePicture }
+    }
+    const userFollowing = await Promise.all<any[]>(user.following.map((id) => User.findById(id).then(u => (createUserObj(u)))))
+
+    res.status(200).json({ userFollowing })
+  } catch (err: any) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err)
+  }
+}
+
 export const getNotifications = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = await User.findById(req.userId)
@@ -218,3 +291,14 @@ export const getNotifications = async (req: Request, res: Response, next: NextFu
 
 
 }
+
+
+
+
+const clearImage = (imagePath: string) => {
+  imagePath = join(__dirname, imagePath);
+  unlink(imagePath, (err) => {
+    if (err)
+      console.log(err)
+  });
+};
