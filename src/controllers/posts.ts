@@ -5,6 +5,7 @@ import Posts from "../models/posts.js";
 import { Request, Response, NextFunction } from "express";
 import Users from "../models/user.js";
 import { unlink } from 'fs';
+import { clearImage } from '../utils/utils.js';
 
 
 const __dirname = resolve()
@@ -37,7 +38,7 @@ export const updatePost = async (req: Request, res: Response, next: NextFunction
       post.description = updatedDescription
 
       if (updatedImage !== post.image && updatedImage) {
-        clearImage(post.image)
+        clearImage(post.image, __dirname)
         post.image = updatedImage
       }
       await post.save()
@@ -66,8 +67,8 @@ export const deletePost = async (req: Request, res: Response, next: NextFunction
       throw error;
     }
     if (post.userId === req.userId) {
-      clearImage(post.image)
-      await post?.deleteOne()
+      clearImage(post.image, __dirname)
+      await post.deleteOne()
       res.status(200).json("Post deleted successfully")
 
     } else {
@@ -327,10 +328,3 @@ export const likeComment = async (req: Request, res: Response, next: NextFunctio
 
 }
 
-const clearImage = (imagePath: string) => {
-  imagePath = join(__dirname, imagePath);
-  unlink(imagePath, (err) => {
-    if (err)
-      console.log(err)
-  });
-};

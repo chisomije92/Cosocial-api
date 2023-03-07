@@ -7,11 +7,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { join, resolve } from 'path';
+import { resolve } from 'path';
 import { CustomError } from './../error-model/custom-error.js';
 import Posts from "../models/posts.js";
 import Users from "../models/user.js";
-import { unlink } from 'fs';
+import { clearImage } from '../utils/utils.js';
 const __dirname = resolve();
 export const createPosts = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
@@ -41,7 +41,7 @@ export const updatePost = (req, res, next) => __awaiter(void 0, void 0, void 0, 
         if (post.userId === req.userId) {
             post.description = updatedDescription;
             if (updatedImage !== post.image && updatedImage) {
-                clearImage(post.image);
+                clearImage(post.image, __dirname);
                 post.image = updatedImage;
             }
             yield post.save();
@@ -67,8 +67,8 @@ export const deletePost = (req, res, next) => __awaiter(void 0, void 0, void 0, 
             throw error;
         }
         if (post.userId === req.userId) {
-            clearImage(post.image);
-            yield (post === null || post === void 0 ? void 0 : post.deleteOne());
+            clearImage(post.image, __dirname);
+            yield post.deleteOne();
             res.status(200).json("Post deleted successfully");
         }
         else {
@@ -301,11 +301,4 @@ export const likeComment = (req, res, next) => __awaiter(void 0, void 0, void 0,
         next(err);
     }
 });
-const clearImage = (imagePath) => {
-    imagePath = join(__dirname, imagePath);
-    unlink(imagePath, (err) => {
-        if (err)
-            console.log(err);
-    });
-};
 //# sourceMappingURL=posts.js.map

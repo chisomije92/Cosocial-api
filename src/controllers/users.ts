@@ -1,3 +1,4 @@
+import { clearImage } from './../utils/utils.js';
 import { validationResult } from 'express-validator/src/validation-result.js';
 import { CustomError } from './../error-model/custom-error.js';
 import { Request, Response, NextFunction } from "express";
@@ -29,7 +30,7 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
         throw new CustomError("User not found!", 404)
       }
       if (image !== user.profilePicture && image) {
-        clearImage(user.profilePicture)
+        clearImage(user.profilePicture, __dirname)
         user.profilePicture = image
       }
 
@@ -104,7 +105,7 @@ export const deleteUser = async (req: Request, res: Response, next: NextFunction
       if (!user) {
         throw new CustomError("User not found!", 404)
       }
-      clearImage(user.profilePicture)
+      clearImage(user.profilePicture, __dirname)
       return res.status(200).json("Account deletion successful!")
     } catch (err: any) {
       if (!err.statusCode) {
@@ -229,7 +230,7 @@ export const unFollowUser = async (req: Request, res: Response, next: NextFuncti
 export const getFollowers = async (req: Request, res: Response, next: NextFunction) => {
   try {
 
-    const { id, followers } = req.params
+    const { id } = req.params
     const user = await User.findById(id)
 
     if (!user) {
@@ -241,7 +242,7 @@ export const getFollowers = async (req: Request, res: Response, next: NextFuncti
     }
     const userFollowers = await Promise.all<any[]>(user.followers.map((id) => User.findById(id).then(u => (createUserObj(u)))))
 
-    res.status(200).json({ userFollowers })
+    res.status(200).json(userFollowers)
   } catch (err: any) {
     if (!err.statusCode) {
       err.statusCode = 500;
@@ -253,7 +254,7 @@ export const getFollowers = async (req: Request, res: Response, next: NextFuncti
 export const getFollowing = async (req: Request, res: Response, next: NextFunction) => {
   try {
 
-    const { id, followers } = req.params
+    const { id } = req.params
     const user = await User.findById(id)
 
     if (!user) {
@@ -265,7 +266,7 @@ export const getFollowing = async (req: Request, res: Response, next: NextFuncti
     }
     const userFollowing = await Promise.all<any[]>(user.following.map((id) => User.findById(id).then(u => (createUserObj(u)))))
 
-    res.status(200).json({ userFollowing })
+    res.status(200).json(userFollowing)
   } catch (err: any) {
     if (!err.statusCode) {
       err.statusCode = 500;
@@ -292,13 +293,3 @@ export const getNotifications = async (req: Request, res: Response, next: NextFu
 
 }
 
-
-
-
-const clearImage = (imagePath: string) => {
-  imagePath = join(__dirname, imagePath);
-  unlink(imagePath, (err) => {
-    if (err)
-      console.log(err)
-  });
-};
