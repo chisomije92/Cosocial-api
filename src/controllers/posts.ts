@@ -4,7 +4,6 @@ import { CustomError } from './../error-model/custom-error.js';
 import Posts from "../models/posts.js";
 import { Request, Response, NextFunction } from "express";
 import Users from "../models/user.js";
-import { unlink } from 'fs';
 import { clearImage } from '../utils/utils.js';
 
 

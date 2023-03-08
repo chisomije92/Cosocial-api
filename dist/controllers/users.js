@@ -27,7 +27,7 @@ import { resolve } from 'path';
 const __dirname = resolve();
 export const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
-    const { description, email, username, isAdmin } = req.body;
+    const { isAdmin } = req.body;
     const image = (_a = req.file) === null || _a === void 0 ? void 0 : _a.path;
     const validationErrors = validationResult(req);
     if (!validationErrors.isEmpty()) {

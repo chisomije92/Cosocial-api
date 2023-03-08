@@ -4,15 +4,15 @@ import { CustomError } from './../error-model/custom-error.js';
 import { Request, Response, NextFunction } from "express";
 import User from "../models/user.js"
 import bcrypt from "bcrypt"
-import { join, resolve } from 'path';
-import { unlink } from 'fs';
+import { resolve } from 'path';
+
 
 
 
 const __dirname = resolve()
 
 export const updateUser = async (req: Request, res: Response, next: NextFunction) => {
-  const { description, email, username, isAdmin } = req.body
+  const { isAdmin } = req.body
   const image = req.file?.path;
 
 
