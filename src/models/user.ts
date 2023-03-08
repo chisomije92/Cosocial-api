@@ -21,8 +21,10 @@ export interface UserType extends mongoose.Document {
   bookmarks: Types.ObjectId[]
   notifications: {
     actions: string;
+    actionUserId: string;
+    actionPostId?: string;
     read: boolean;
-    dateOfAction: string
+    dateOfAction: string;
   }[];
   updatedAt: string;
   createdAt: string
@@ -95,6 +97,8 @@ const UserSchema = new Schema<UserType>({
   notifications: [
     {
       actions: { type: String },
+      actionUserId: { type: String },
+      actionPostId: { type: String },
       read: { type: Boolean },
       dateOfAction: { type: String }
     }

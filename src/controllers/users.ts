@@ -161,6 +161,7 @@ export const followUser = async (req: Request, res: Response, next: NextFunction
             $push: {
               notifications: {
                 actions: `${currentUser.username} followed you`,
+                actionUserId: currentUser.id,
                 read: false,
                 dateOfAction: new Date().toISOString()
               }

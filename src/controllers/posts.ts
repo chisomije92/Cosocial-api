@@ -107,6 +107,8 @@ export const likePost = async (req: Request, res: Response, next: NextFunction) 
             $push: {
               notifications: {
                 actions: `${currentUser?.username} liked your post`,
+                actionUserId: currentUser?.id,
+                actionPostId: post.id,
                 read: false,
                 dateOfAction: new Date().toISOString()
               }
@@ -239,7 +241,8 @@ export const createComment = async (req: Request, res: Response, next: NextFunct
       throw new CustomError("Post not found", 404)
     }
     const currentUser = await Users.findById(req.userId)
-    if (!currentUser) {
+    const postUser = await Users.findById(post.userId)
+    if (!currentUser || !postUser) {
       throw new CustomError("User not found", 404)
     }
     await post?.updateOne({
@@ -250,6 +253,17 @@ export const createComment = async (req: Request, res: Response, next: NextFunct
           commenterId: currentUser.id,
           likes: []
 
+        }
+      }
+    })
+    await postUser.updateOne({
+      $push: {
+        notifications: {
+          actions: `${currentUser.username} replied your post`,
+          actionPostId: post.id,
+          actionUserId: currentUser.id,
+          read: false,
+          dateOfAction: new Date().toISOString()
         }
       }
     })
@@ -298,6 +312,7 @@ export const likeComment = async (req: Request, res: Response, next: NextFunctio
           $push: {
             notifications: {
               actions: `${currentUser?.username} liked your post`,
+              actionUserUd: currentUser.id,
               read: false,
               dateOfAction: new Date().toISOString()
             }

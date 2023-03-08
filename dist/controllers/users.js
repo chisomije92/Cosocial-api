@@ -158,6 +158,7 @@ export const followUser = (req, res, next) => __awaiter(void 0, void 0, void 0, 
                         $push: {
                             notifications: {
                                 actions: `${currentUser.username} followed you`,
+                                actionUserId: currentUser.id,
                                 read: false,
                                 dateOfAction: new Date().toISOString()
                             }

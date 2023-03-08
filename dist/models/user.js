@@ -65,6 +65,8 @@ const UserSchema = new Schema({
     notifications: [
         {
             actions: { type: String },
+            actionUserId: { type: String },
+            actionPostId: { type: String },
             read: { type: Boolean },
             dateOfAction: { type: String }
         }

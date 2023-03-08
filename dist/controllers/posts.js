@@ -104,6 +104,8 @@ export const likePost = (req, res, next) => __awaiter(void 0, void 0, void 0, fu
                         $push: {
                             notifications: {
                                 actions: `${currentUser === null || currentUser === void 0 ? void 0 : currentUser.username} liked your post`,
+                                actionUserId: currentUser === null || currentUser === void 0 ? void 0 : currentUser.id,
+                                actionPostId: post.id,
                                 read: false,
                                 dateOfAction: new Date().toISOString()
                             }
@@ -222,7 +224,8 @@ export const createComment = (req, res, next) => __awaiter(void 0, void 0, void 
             throw new CustomError("Post not found", 404);
         }
         const currentUser = yield Users.findById(req.userId);
-        if (!currentUser) {
+        const postUser = yield Users.findById(post.userId);
+        if (!currentUser || !postUser) {
             throw new CustomError("User not found", 404);
         }
         yield (post === null || post === void 0 ? void 0 : post.updateOne({
@@ -235,6 +238,17 @@ export const createComment = (req, res, next) => __awaiter(void 0, void 0, void 
                 }
             }
         }));
+        yield postUser.updateOne({
+            $push: {
+                notifications: {
+                    actions: `${currentUser.username} replied your post`,
+                    actionPostId: post.id,
+                    actionUserId: currentUser.id,
+                    read: false,
+                    dateOfAction: new Date().toISOString()
+                }
+            }
+        });
         res.status(200).json("You made a comment");
     }
     catch (err) {
@@ -274,6 +288,7 @@ export const likeComment = (req, res, next) => __awaiter(void 0, void 0, void 0,
                     $push: {
                         notifications: {
                             actions: `${currentUser === null || currentUser === void 0 ? void 0 : currentUser.username} liked your post`,
+                            actionUserUd: currentUser.id,
                             read: false,
                             dateOfAction: new Date().toISOString()
                         }
