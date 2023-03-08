@@ -1,3 +1,4 @@
+/** @format */
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -18,12 +19,12 @@ var __rest = (this && this.__rest) || function (s, e) {
         }
     return t;
 };
-import { clearImage } from './../utils/utils.js';
-import { validationResult } from 'express-validator/src/validation-result.js';
-import { CustomError } from './../error-model/custom-error.js';
+import { clearImage } from "./../utils/utils.js";
+import { validationResult } from "express-validator/src/validation-result.js";
+import { CustomError } from "./../error-model/custom-error.js";
 import User from "../models/user.js";
 import bcrypt from "bcrypt";
-import { resolve } from 'path';
+import { resolve } from "path";
 const __dirname = resolve();
 export const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
@@ -32,7 +33,9 @@ export const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, 
     const validationErrors = validationResult(req);
     if (!validationErrors.isEmpty()) {
         const error = new CustomError("Validation failed, entered data is incorrect", 422, validationErrors.array());
-        return res.status(error.statusCode).json({ message: error.message, errors: error.errors });
+        return res
+            .status(error.statusCode)
+            .json({ message: error.message, errors: error.errors });
     }
     if (req.userId === req.params.id || isAdmin) {
         try {
@@ -45,7 +48,7 @@ export const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, 
                 user.profilePicture = image;
             }
             yield User.findByIdAndUpdate(req.userId, {
-                $set: Object.assign(Object.assign({}, req.body), { profilePicture: image })
+                $set: Object.assign(Object.assign({}, req.body), { profilePicture: image }),
             });
             res.status(200).json("Account updated");
         }
@@ -66,7 +69,9 @@ export const changePassword = (req, res, next) => __awaiter(void 0, void 0, void
     const validationErrors = validationResult(req);
     if (!validationErrors.isEmpty()) {
         const error = new CustomError("Validation failed, entered data is incorrect", 422, validationErrors.array());
-        return res.status(error.statusCode).json({ message: error.message, errors: error.errors });
+        return res
+            .status(error.statusCode)
+            .json({ message: error.message, errors: error.errors });
     }
     try {
         const user = yield User.findById(req.userId);
@@ -152,7 +157,9 @@ export const followUser = (req, res, next) => __awaiter(void 0, void 0, void 0, 
             }
             if (req.userId) {
                 if (!userToBeFollowed.followers.includes(req.userId) && currentUser) {
-                    yield userToBeFollowed.updateOne({ $push: { followers: req.userId } });
+                    yield userToBeFollowed.updateOne({
+                        $push: { followers: req.userId },
+                    });
                     yield currentUser.updateOne({ $push: { following: req.params.id } });
                     yield userToBeFollowed.updateOne({
                         $push: {
@@ -160,11 +167,11 @@ export const followUser = (req, res, next) => __awaiter(void 0, void 0, void 0, 
                                 actions: `${currentUser.username} followed you`,
                                 actionUserId: currentUser.id,
                                 read: false,
-                                dateOfAction: new Date().toISOString()
-                            }
-                        }
+                                dateOfAction: new Date().toISOString(),
+                            },
+                        },
                     });
-                    res.status(200).json('User has been followed');
+                    res.status(200).json("User has been followed");
                 }
                 else {
                     const error = new CustomError("You already follow this user!", 403);
@@ -202,7 +209,7 @@ export const unFollowUser = (req, res, next) => __awaiter(void 0, void 0, void 0
                 if (userToBeUnFollowed.followers.includes(userId) && currentUser) {
                     yield userToBeUnFollowed.updateOne({ $pull: { followers: userId } });
                     yield currentUser.updateOne({ $pull: { following: req.params.id } });
-                    return res.status(200).json('You have stopped following this user');
+                    return res.status(200).json("You have stopped following this user");
                 }
                 else {
                     const error = new CustomError("You do not follow this user!", 403);
@@ -231,9 +238,17 @@ export const getFollowers = (req, res, next) => __awaiter(void 0, void 0, void 0
             throw error;
         }
         const createUserObj = (u) => {
-            return { id: u === null || u === void 0 ? void 0 : u._id, username: u === null || u === void 0 ? void 0 : u.username, description: u === null || u === void 0 ? void 0 : u.description, email: u === null || u === void 0 ? void 0 : u.email, followers: u === null || u === void 0 ? void 0 : u.followers, following: u === null || u === void 0 ? void 0 : u.following, profilePicture: u === null || u === void 0 ? void 0 : u.profilePicture };
+            return {
+                id: u === null || u === void 0 ? void 0 : u._id,
+                username: u === null || u === void 0 ? void 0 : u.username,
+                description: u === null || u === void 0 ? void 0 : u.description,
+                email: u === null || u === void 0 ? void 0 : u.email,
+                followers: u === null || u === void 0 ? void 0 : u.followers,
+                following: u === null || u === void 0 ? void 0 : u.following,
+                profilePicture: u === null || u === void 0 ? void 0 : u.profilePicture,
+            };
         };
-        const userFollowers = yield Promise.all(user.followers.map((id) => User.findById(id).then(u => (createUserObj(u)))));
+        const userFollowers = yield Promise.all(user.followers.map(id => User.findById(id).then(u => createUserObj(u))));
         res.status(200).json(userFollowers);
     }
     catch (err) {
@@ -252,10 +267,78 @@ export const getFollowing = (req, res, next) => __awaiter(void 0, void 0, void 0
             throw error;
         }
         const createUserObj = (u) => {
-            return { id: u === null || u === void 0 ? void 0 : u._id, username: u === null || u === void 0 ? void 0 : u.username, description: u === null || u === void 0 ? void 0 : u.description, email: u === null || u === void 0 ? void 0 : u.email, followers: u === null || u === void 0 ? void 0 : u.followers, following: u === null || u === void 0 ? void 0 : u.following, profilePicture: u === null || u === void 0 ? void 0 : u.profilePicture };
+            return {
+                id: u === null || u === void 0 ? void 0 : u.id,
+                username: u === null || u === void 0 ? void 0 : u.username,
+                description: u === null || u === void 0 ? void 0 : u.description,
+                email: u === null || u === void 0 ? void 0 : u.email,
+                followers: u === null || u === void 0 ? void 0 : u.followers,
+                following: u === null || u === void 0 ? void 0 : u.following,
+                profilePicture: u === null || u === void 0 ? void 0 : u.profilePicture,
+            };
         };
-        const userFollowing = yield Promise.all(user.following.map((id) => User.findById(id).then(u => (createUserObj(u)))));
+        const userFollowing = yield Promise.all(user.following.map(id => User.findById(id).then(u => createUserObj(u))));
         res.status(200).json(userFollowing);
+    }
+    catch (err) {
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
+    }
+});
+export const getNotFollowing = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const user = yield User.findById(req.userId);
+        if (!user) {
+            const error = new CustomError("User not found!", 403);
+            throw error;
+        }
+        const allUsers = yield User.find();
+        const userNotFollowing = allUsers
+            .filter(u => {
+            return !user.following.includes(u.id) && u.id !== req.userId;
+        })
+            .map(u => ({
+            id: u.id,
+            username: u.username,
+            description: u.description,
+            email: u.email,
+            followers: u.followers,
+            following: u.following,
+            profilePicture: u === null || u === void 0 ? void 0 : u.profilePicture,
+        }));
+        res.status(200).json(userNotFollowing);
+    }
+    catch (err) {
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
+    }
+});
+export const getNonFollowers = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const user = yield User.findById(req.userId);
+        if (!user) {
+            const error = new CustomError("User not found!", 403);
+            throw error;
+        }
+        const allUsers = yield User.find();
+        const userNonFollowers = allUsers
+            .filter(u => {
+            return !user.followers.includes(u.id) && u.id !== req.userId;
+        })
+            .map(u => ({
+            id: u.id,
+            username: u.username,
+            description: u.description,
+            email: u.email,
+            followers: u.followers,
+            following: u.following,
+            profilePicture: u === null || u === void 0 ? void 0 : u.profilePicture,
+        }));
+        res.status(200).json(userNonFollowers);
     }
     catch (err) {
         if (!err.statusCode) {
