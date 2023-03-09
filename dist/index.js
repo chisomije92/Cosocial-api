@@ -58,7 +58,10 @@ app.use((error, req, res, next) => {
     const message = error.message;
     res.status(status).json({ message: message });
 });
-app.listen(8000, () => {
-    console.log("Server is running");
-});
+if (MONGO_URL) {
+    mongoose.connect(MONGO_URL)
+        .then(() => console.log("Connected to Mongo db")).then(() => app.listen(8000, () => {
+        console.log("Server is running");
+    }));
+}
 //# sourceMappingURL=index.js.map

@@ -23,6 +23,7 @@ dotenv.config()
 const { MONGO_URL } = process.env
 
 mongoose.set("strictQuery", false);
+
 if (MONGO_URL) {
   mongoose.connect(MONGO_URL)
     .then(() => console.log("Connected to Mongo db"))
@@ -84,6 +85,11 @@ app.use((error: any, req: Request, res: Response, next: NextFunction) => {
 });
 
 
-app.listen(8000, () => {
-  console.log("Server is running")
-})
+
+
+if (MONGO_URL) {
+  mongoose.connect(MONGO_URL)
+    .then(() => console.log("Connected to Mongo db")).then(() => app.listen(8000, () => {
+      console.log("Server is running")
+    }))
+}
