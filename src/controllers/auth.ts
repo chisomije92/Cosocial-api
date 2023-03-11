@@ -30,7 +30,7 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
   try {
     const existingEmail = await User.findOne({ email: email })
     if (existingEmail) {
-      const error = new CustomError("User exists already!", 409)
+      const error = new CustomError("User exists already", 409)
       throw error
     }
     const salt = await bcrypt.genSalt(10)
@@ -70,12 +70,12 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
   try {
     const user = await User.findOne({ email: email })
     if (!user) {
-      const error = new CustomError("User not found!", 404);
+      const error = new CustomError("User does not exist", 404);
       throw error;
     }
     const validPassword = await bcrypt.compare(password, user!.password)
     if (!validPassword) {
-      const error = new CustomError("User credentials are invalid!", 400);
+      const error = new CustomError("Credentials are invalid!", 400);
       throw error;
 
     }

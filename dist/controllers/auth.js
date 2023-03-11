@@ -35,7 +35,7 @@ export const registerUser = (req, res, next) => __awaiter(void 0, void 0, void 0
     try {
         const existingEmail = yield User.findOne({ email: email });
         if (existingEmail) {
-            const error = new CustomError("User exists already!", 409);
+            const error = new CustomError("User exists already", 409);
             throw error;
         }
         const salt = yield bcrypt.genSalt(10);
@@ -69,12 +69,12 @@ export const loginUser = (req, res, next) => __awaiter(void 0, void 0, void 0, f
     try {
         const user = yield User.findOne({ email: email });
         if (!user) {
-            const error = new CustomError("User not found!", 404);
+            const error = new CustomError("User does not exist", 404);
             throw error;
         }
         const validPassword = yield bcrypt.compare(password, user.password);
         if (!validPassword) {
-            const error = new CustomError("User credentials are invalid!", 400);
+            const error = new CustomError("Credentials are invalid!", 400);
             throw error;
         }
         const token = sign({

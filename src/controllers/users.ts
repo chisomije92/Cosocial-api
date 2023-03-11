@@ -34,7 +34,7 @@ export const updateUser = async (
     try {
       const user = await User.findById(req.userId);
       if (!user) {
-        throw new CustomError("User not found!", 404);
+        throw new CustomError("User does not finish", 404);
       }
       if (image !== user.profilePicture && image) {
         clearImage(user.profilePicture, __dirname);
@@ -125,7 +125,7 @@ export const deleteUser = async (
     try {
       const user = await User.findByIdAndDelete(req.userId);
       if (!user) {
-        throw new CustomError("User not found!", 404);
+        throw new CustomError("User does not exist", 404);
       }
       clearImage(user.profilePicture, __dirname);
       return res.status(200).json("Account deletion successful!");
@@ -152,7 +152,7 @@ export const getUser = async (
   try {
     const user = await User.findById(req.params.id);
     if (!user) {
-      throw new CustomError("User not found", 404);
+      throw new CustomError("User does not exist", 404);
     }
     const { password, isAdmin, __v, ...rest } = user.toObject();
     res.status(200).json(rest);
@@ -276,7 +276,7 @@ export const getFollowers = async (
     const user = await User.findById(id);
 
     if (!user) {
-      const error = new CustomError("User not found!", 403);
+      const error = new CustomError("User does not exist", 403);
       throw error;
     }
     const createUserObj = (u: any) => {
@@ -313,7 +313,7 @@ export const getFollowing = async (
     const user = await User.findById(id);
 
     if (!user) {
-      const error = new CustomError("User not found!", 403);
+      const error = new CustomError("User does not exist", 403);
       throw error;
     }
     const createUserObj = (u: any) => {
@@ -348,7 +348,7 @@ export const getNotFollowing = async (
   try {
     const user = await User.findById(req.userId);
     if (!user) {
-      const error = new CustomError("User not found!", 403);
+      const error = new CustomError("User does not exist", 403);
       throw error;
     }
     const allUsers = await User.find();
@@ -384,7 +384,7 @@ export const getNonFollowers = async (
   try {
     const user = await User.findById(req.userId);
     if (!user) {
-      const error = new CustomError("User not found!", 403);
+      const error = new CustomError("User does not exist", 403);
       throw error;
     }
     const allUsers = await User.find();
@@ -419,7 +419,7 @@ export const getNotifications = async (
   try {
     const user = await User.findById(req.userId);
     if (!user) {
-      const error = new CustomError("User not found!", 403);
+      const error = new CustomError("User does not exist", 403);
       throw error;
     }
     res.status(200).json(user.notifications);

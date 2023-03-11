@@ -41,7 +41,7 @@ export const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, 
         try {
             const user = yield User.findById(req.userId);
             if (!user) {
-                throw new CustomError("User not found!", 404);
+                throw new CustomError("User does not finish", 404);
             }
             if (image !== user.profilePicture && image) {
                 clearImage(user.profilePicture, __dirname);
@@ -109,7 +109,7 @@ export const deleteUser = (req, res, next) => __awaiter(void 0, void 0, void 0, 
         try {
             const user = yield User.findByIdAndDelete(req.userId);
             if (!user) {
-                throw new CustomError("User not found!", 404);
+                throw new CustomError("User does not exist", 404);
             }
             clearImage(user.profilePicture, __dirname);
             return res.status(200).json("Account deletion successful!");
@@ -130,7 +130,7 @@ export const getUser = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
     try {
         const user = yield User.findById(req.params.id);
         if (!user) {
-            throw new CustomError("User not found", 404);
+            throw new CustomError("User does not exist", 404);
         }
         const _b = user.toObject(), { password, isAdmin, __v } = _b, rest = __rest(_b, ["password", "isAdmin", "__v"]);
         res.status(200).json(rest);
@@ -234,7 +234,7 @@ export const getFollowers = (req, res, next) => __awaiter(void 0, void 0, void 0
         const { id } = req.params;
         const user = yield User.findById(id);
         if (!user) {
-            const error = new CustomError("User not found!", 403);
+            const error = new CustomError("User does not exist", 403);
             throw error;
         }
         const createUserObj = (u) => {
@@ -263,7 +263,7 @@ export const getFollowing = (req, res, next) => __awaiter(void 0, void 0, void 0
         const { id } = req.params;
         const user = yield User.findById(id);
         if (!user) {
-            const error = new CustomError("User not found!", 403);
+            const error = new CustomError("User does not exist", 403);
             throw error;
         }
         const createUserObj = (u) => {
@@ -291,7 +291,7 @@ export const getNotFollowing = (req, res, next) => __awaiter(void 0, void 0, voi
     try {
         const user = yield User.findById(req.userId);
         if (!user) {
-            const error = new CustomError("User not found!", 403);
+            const error = new CustomError("User does not exist", 403);
             throw error;
         }
         const allUsers = yield User.find();
@@ -321,7 +321,7 @@ export const getNonFollowers = (req, res, next) => __awaiter(void 0, void 0, voi
     try {
         const user = yield User.findById(req.userId);
         if (!user) {
-            const error = new CustomError("User not found!", 403);
+            const error = new CustomError("User does not exist", 403);
             throw error;
         }
         const allUsers = yield User.find();
@@ -351,7 +351,7 @@ export const getNotifications = (req, res, next) => __awaiter(void 0, void 0, vo
     try {
         const user = yield User.findById(req.userId);
         if (!user) {
-            const error = new CustomError("User not found!", 403);
+            const error = new CustomError("User does not exist", 403);
             throw error;
         }
         res.status(200).json(user.notifications);

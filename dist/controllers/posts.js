@@ -36,7 +36,7 @@ export const updatePost = (req, res, next) => __awaiter(void 0, void 0, void 0, 
     try {
         const post = yield Posts.findById(req.params.id);
         if (!post) {
-            throw new CustomError("Post not found", 404);
+            throw new CustomError("Post does not exist", 404);
         }
         if (post.userId === req.userId) {
             post.description = updatedDescription;
@@ -63,7 +63,7 @@ export const deletePost = (req, res, next) => __awaiter(void 0, void 0, void 0, 
     try {
         const post = yield Posts.findById(req.params.id);
         if (!post) {
-            const error = new CustomError("Post not found!", 404);
+            const error = new CustomError("Post does not exist!", 404);
             throw error;
         }
         if (post.userId === req.userId) {
@@ -87,12 +87,12 @@ export const likePost = (req, res, next) => __awaiter(void 0, void 0, void 0, fu
     try {
         const post = yield Posts.findById(req.params.id);
         if (!post) {
-            const error = new CustomError("Post not found!", 404);
+            const error = new CustomError("Post does not exist", 404);
             throw error;
         }
         const targetUser = yield Users.findById(post.userId);
         if (!targetUser) {
-            const error = new CustomError("User not found!", 404);
+            const error = new CustomError("User does not exist", 404);
             throw error;
         }
         if (req.userId) {
