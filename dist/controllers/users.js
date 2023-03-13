@@ -142,6 +142,22 @@ export const getUser = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
         next(err);
     }
 });
+export const getAuthUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const user = yield User.findById(req.userId);
+        if (!user) {
+            throw new CustomError("User does not exist", 404);
+        }
+        const _c = user.toObject(), { password, isAdmin, __v } = _c, rest = __rest(_c, ["password", "isAdmin", "__v"]);
+        res.status(200).json(rest);
+    }
+    catch (err) {
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
+    }
+});
 export const followUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     if (req.userId !== req.params.id) {
         try {

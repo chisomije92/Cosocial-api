@@ -164,6 +164,26 @@ export const getUser = async (
   }
 };
 
+export const getAuthUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) {
+      throw new CustomError("User does not exist", 404);
+    }
+    const { password, isAdmin, __v, ...rest } = user.toObject();
+    res.status(200).json(rest);
+  } catch (err: any) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+};
+
 export const followUser = async (
   req: Request,
   res: Response,
