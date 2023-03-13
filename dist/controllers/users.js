@@ -19,17 +19,30 @@ var __rest = (this && this.__rest) || function (s, e) {
         }
     return t;
 };
-import { clearImage } from "./../utils/utils.js";
+//import { clearImage } from "./../utils/utils.js";
 import { validationResult } from "express-validator/src/validation-result.js";
 import { CustomError } from "./../error-model/custom-error.js";
 import User from "../models/user.js";
 import bcrypt from "bcrypt";
-import { resolve } from "path";
+import { join, resolve } from "path";
+import { unlink } from "fs";
 const __dirname = resolve();
+export const clearImage = (imagePath, dirname) => {
+    imagePath = join(dirname, imagePath);
+    unlink(imagePath, (err) => {
+        if (err)
+            throw err;
+    });
+};
 export const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     const { isAdmin } = req.body;
     const image = (_a = req.file) === null || _a === void 0 ? void 0 : _a.path;
+    let imageUrl = image;
+    if (req.file) {
+        imageUrl = req.file.path.replace("\\", "/");
+    }
+    console.log({ image, imageUrl });
     const validationErrors = validationResult(req);
     if (!validationErrors.isEmpty()) {
         const error = new CustomError("Validation failed, entered data is incorrect", 422, validationErrors.array());
@@ -43,12 +56,11 @@ export const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, 
             if (!user) {
                 throw new CustomError("User does not finish", 404);
             }
-            if (image !== user.profilePicture && image) {
+            if (imageUrl && imageUrl !== user.profilePicture && user.profilePicture.length > 0) {
                 clearImage(user.profilePicture, __dirname);
-                user.profilePicture = image;
             }
             yield User.findByIdAndUpdate(req.userId, {
-                $set: Object.assign(Object.assign({}, req.body), { profilePicture: image }),
+                $set: Object.assign(Object.assign({}, req.body), { profilePicture: imageUrl }),
             });
             res.status(200).json("Account updated");
         }
