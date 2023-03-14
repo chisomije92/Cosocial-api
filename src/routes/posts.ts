@@ -1,4 +1,4 @@
-import { createPosts, deletePost, updatePost, likePost, getPost, getPostsOnTL, bookmarkPost, getAllBookmarks, createComment, likeComment, getPostsOnExplore } from './../controllers/posts.js';
+import { createPosts, deletePost, updatePost, likePost, getPost, getPostsOnTL, bookmarkPost, getAllBookmarks, createComment, likeComment, getPostsOnExplore, getUserPosts } from './../controllers/posts.js';
 import express from "express"
 import isAuth from '../middlewares/is-auth.js';
 
@@ -7,8 +7,10 @@ const router = express.Router()
 
 
 router.post('/', isAuth, createPosts)
+
 router.get("/bookmark", isAuth, getAllBookmarks)
 router.get("/explore", isAuth, getPostsOnExplore)
+router.get('/user-posts/:id', isAuth, getUserPosts)
 router.put("/:id", isAuth, updatePost)
 router.delete("/:id", isAuth, deletePost)
 router.get("/:id", isAuth, getPost)

@@ -19,21 +19,13 @@ var __rest = (this && this.__rest) || function (s, e) {
         }
     return t;
 };
-//import { clearImage } from "./../utils/utils.js";
+import { clearImage } from "./../utils/utils.js";
 import { validationResult } from "express-validator/src/validation-result.js";
 import { CustomError } from "./../error-model/custom-error.js";
 import User from "../models/user.js";
 import bcrypt from "bcrypt";
-import { join, resolve } from "path";
-import { unlink } from "fs";
+import { resolve } from "path";
 const __dirname = resolve();
-export const clearImage = (imagePath, dirname) => {
-    imagePath = join(dirname, imagePath);
-    unlink(imagePath, (err) => {
-        if (err)
-            throw err;
-    });
-};
 export const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     const { isAdmin } = req.body;
@@ -42,7 +34,6 @@ export const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, 
     if (req.file) {
         imageUrl = req.file.path.replace("\\", "/");
     }
-    console.log({ image, imageUrl });
     const validationErrors = validationResult(req);
     if (!validationErrors.isEmpty()) {
         const error = new CustomError("Validation failed, entered data is incorrect", 422, validationErrors.array());

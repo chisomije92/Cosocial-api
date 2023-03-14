@@ -17,8 +17,12 @@ export const createPosts = (req, res, next) => __awaiter(void 0, void 0, void 0,
     var _a;
     const image = (_a = req.file) === null || _a === void 0 ? void 0 : _a.path;
     const description = req.body.description;
+    let imageUrl = image;
+    if (req.file) {
+        imageUrl = req.file.path.replace("\\", "/");
+    }
     try {
-        const newPost = new Posts({ description, image, userId: req.userId });
+        const newPost = new Posts({ description, image: imageUrl, userId: req.userId });
         const savedPost = yield newPost.save();
         res.status(200).json(savedPost);
     }
@@ -33,6 +37,10 @@ export const updatePost = (req, res, next) => __awaiter(void 0, void 0, void 0, 
     var _b;
     const updatedDescription = req.body.description;
     const updatedImage = (_b = req.file) === null || _b === void 0 ? void 0 : _b.path;
+    let imageUrl = updatedImage;
+    if (req.file) {
+        imageUrl = req.file.path.replace("\\", "/");
+    }
     try {
         const post = yield Posts.findById(req.params.id);
         if (!post) {
@@ -40,9 +48,9 @@ export const updatePost = (req, res, next) => __awaiter(void 0, void 0, void 0, 
         }
         if (post.userId === req.userId) {
             post.description = updatedDescription;
-            if (updatedImage !== post.image && updatedImage) {
+            if (imageUrl && imageUrl !== post.image && post.image.length > 0) {
                 clearImage(post.image, __dirname);
-                post.image = updatedImage;
+                post.image = imageUrl;
             }
             yield post.save();
             res.status(200).json("Post updated successfully");
@@ -75,6 +83,23 @@ export const deletePost = (req, res, next) => __awaiter(void 0, void 0, void 0, 
             const error = new CustomError("You can only delete posts made by you!", 403);
             throw error;
         }
+    }
+    catch (err) {
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
+    }
+});
+export const getUserPosts = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const currentUser = yield Users.findById(req.params.id);
+        if (!currentUser) {
+            const error = new CustomError("User not found!", 404);
+            throw error;
+        }
+        const userPosts = yield Posts.find({ userId: currentUser._id });
+        res.status(200).json(userPosts);
     }
     catch (err) {
         if (!err.statusCode) {
