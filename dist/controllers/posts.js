@@ -22,7 +22,7 @@ export const createPosts = (req, res, next) => __awaiter(void 0, void 0, void 0,
         imageUrl = req.file.path.replace("\\", "/");
     }
     try {
-        const newPost = new Posts({ description, image: imageUrl, userId: req.userId });
+        const newPost = new Posts({ description, image: imageUrl, userId: req.userId, linkedUser: req.userId });
         const savedPost = yield newPost.save();
         res.status(200).json(savedPost);
     }
@@ -46,7 +46,7 @@ export const updatePost = (req, res, next) => __awaiter(void 0, void 0, void 0, 
         if (!post) {
             throw new CustomError("Post does not exist", 404);
         }
-        if (post.userId === req.userId) {
+        if (post.userId.toString() === req.userId) {
             post.description = updatedDescription;
             if (imageUrl && imageUrl !== post.image && post.image.length > 0) {
                 clearImage(post.image, __dirname);
@@ -154,7 +154,9 @@ export const likePost = (req, res, next) => __awaiter(void 0, void 0, void 0, fu
 });
 export const getPost = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const post = yield Posts.findById(req.params.id);
+        const post = yield Posts.findById(req.params.id).populate("linkedUser", "username email profilePicture");
+        const testPost = yield Posts.find({ userId: req.userId });
+        console.log(testPost);
         if (!post) {
             const error = new CustomError("Post not found!", 404);
             throw error;
@@ -171,12 +173,12 @@ export const getPost = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
 export const getPostsOnTL = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const currentUser = yield Users.findById(req.params.id);
-        const userPosts = yield Posts.find({ userId: currentUser === null || currentUser === void 0 ? void 0 : currentUser._id });
         if (!currentUser) {
             const error = new CustomError("User not found!", 404);
             throw error;
         }
-        const friendPosts = yield Promise.all(currentUser.following.map(friendId => { return Posts.find({ userId: friendId }); }));
+        const userPosts = yield Posts.find({ userId: currentUser._id }).populate("linkedUser", "username email profilePicture");
+        const friendPosts = yield Promise.all(currentUser.following.map(friendId => { return Posts.find({ userId: friendId }).populate("linkedUser", "username email profilePicture"); }));
         res.status(200).json(userPosts.concat(...friendPosts));
     }
     catch (err) {
@@ -188,8 +190,10 @@ export const getPostsOnTL = (req, res, next) => __awaiter(void 0, void 0, void 0
 });
 export const getPostsOnExplore = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const posts = yield Posts.find();
-        res.status(200).json(posts);
+        const posts = yield Posts.find().populate("linkedUser", "username email profilePicture");
+        const randomPosts = yield Posts.aggregate([{ $sample: { size: 3 } }]);
+        const aggregatedPosts = yield Posts.populate(randomPosts, { path: "linkedUser", select: "email username profilePicture" });
+        res.status(200).json(aggregatedPosts);
     }
     catch (err) {
         if (!err.statusCode) {

@@ -65,7 +65,10 @@ app.use(
     fileFilter: fileFilter,
   }).single("image")
 );
-app.use(helmet())
+app.use(helmet({
+  crossOriginEmbedderPolicy: false,
+
+}))
 app.use(morgan("common"))
 
 

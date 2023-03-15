@@ -45,7 +45,9 @@ app.use(multer({
     storage: fileStorage,
     fileFilter: fileFilter,
 }).single("image"));
-app.use(helmet());
+app.use(helmet({
+    crossOriginEmbedderPolicy: false,
+}));
 app.use(morgan("common"));
 app.get("/", (req, res) => {
     res.send("COSOCIAL API");

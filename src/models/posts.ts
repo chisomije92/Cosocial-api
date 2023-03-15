@@ -1,3 +1,4 @@
+
 /** @format */
 
 import mongoose, { Types } from "mongoose";
@@ -15,6 +16,7 @@ interface Reply {
 export interface PostType extends mongoose.Document {
   _id?: Types.ObjectId;
   userId: string;
+  linkedUser: Types.ObjectId;
   description: string;
   image: string;
   likes: string[];
@@ -25,10 +27,13 @@ export interface PostType extends mongoose.Document {
 }
 
 const PostSchema = new Schema<PostType>({
-  userId: {
-    type: String,
+
+  linkedUser: {
+    type: Schema.Types.ObjectId,
+    ref: "Users",
     required: true,
   },
+  userId: String,
   description: {
     type: String,
     max: 50,

@@ -19,7 +19,7 @@ export const createPosts = async (req: Request, res: Response, next: NextFunctio
   }
 
   try {
-    const newPost = new Posts({ description, image: imageUrl, userId: req.userId })
+    const newPost = new Posts({ description, image: imageUrl, userId: req.userId, linkedUser: req.userId })
     const savedPost = await newPost.save()
     res.status(200).json(savedPost)
   } catch (err: any) {
@@ -43,7 +43,7 @@ export const updatePost = async (req: Request, res: Response, next: NextFunction
     if (!post) {
       throw new CustomError("Post does not exist", 404)
     }
-    if (post.userId === req.userId) {
+    if (post.userId.toString() === req.userId) {
 
       post.description = updatedDescription
 
@@ -163,13 +163,15 @@ export const likePost = async (req: Request, res: Response, next: NextFunction) 
 
 export const getPost = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const post = await Posts.findById(req.params.id)
+    const post = await Posts.findById(req.params.id).populate("linkedUser", "username email profilePicture")
+    const testPost = await Posts.find({ userId: req.userId })
+    console.log(testPost)
     if (!post) {
       const error = new CustomError("Post not found!", 404);
-      throw error;
+      throw error
     }
-    res.status(200).json(post)
 
+    res.status(200).json(post)
   } catch (err: any) {
     if (!err.statusCode) {
       err.statusCode = 500;
@@ -182,15 +184,18 @@ export const getPost = async (req: Request, res: Response, next: NextFunction) =
 export const getPostsOnTL = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const currentUser = await Users.findById(req.params.id)
-    const userPosts = await Posts.find({ userId: currentUser?._id })
+
     if (!currentUser) {
       const error = new CustomError("User not found!", 404);
       throw error;
     }
+    const userPosts = await Posts.find({ userId: currentUser._id }).populate("linkedUser", "username email profilePicture")
     const friendPosts = await Promise.all<any[]>(
-      currentUser.following.map(friendId => { return Posts.find({ userId: friendId }) })
+      currentUser.following.map(friendId => { return Posts.find({ userId: friendId }).populate("linkedUser", "username email profilePicture") })
     )
+
     res.status(200).json(userPosts.concat(...friendPosts))
+
 
   } catch (err: any) {
     if (!err.statusCode) {
@@ -203,8 +208,11 @@ export const getPostsOnTL = async (req: Request, res: Response, next: NextFuncti
 
 export const getPostsOnExplore = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const posts = await Posts.find()
-    res.status(200).json(posts)
+    const posts = await Posts.find().populate("linkedUser", "username email profilePicture")
+    const randomPosts = await Posts.aggregate([{ $sample: { size: 3 } }])
+    const aggregatedPosts = await Posts.populate(randomPosts, { path: "linkedUser", select: "email username profilePicture" })
+
+    res.status(200).json(aggregatedPosts)
 
   } catch (err: any) {
     if (!err.statusCode) {

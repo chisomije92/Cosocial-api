@@ -2,10 +2,12 @@
 import mongoose from "mongoose";
 const { Schema, model } = mongoose;
 const PostSchema = new Schema({
-    userId: {
-        type: String,
+    linkedUser: {
+        type: Schema.Types.ObjectId,
+        ref: "Users",
         required: true,
     },
+    userId: String,
     description: {
         type: String,
         max: 50,
