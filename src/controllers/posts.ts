@@ -209,7 +209,7 @@ export const getPostsOnTL = async (req: Request, res: Response, next: NextFuncti
 export const getPostsOnExplore = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const posts = await Posts.find().populate("linkedUser", "username email profilePicture")
-    const randomPosts = await Posts.aggregate([{ $sample: { size: 3 } }])
+    const randomPosts = await Posts.aggregate([{ $sample: { size: 17 } }])
     const aggregatedPosts = await Posts.populate(randomPosts, { path: "linkedUser", select: "email username profilePicture" })
 
     res.status(200).json(aggregatedPosts)

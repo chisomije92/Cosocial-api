@@ -191,7 +191,7 @@ export const getPostsOnTL = (req, res, next) => __awaiter(void 0, void 0, void 0
 export const getPostsOnExplore = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const posts = yield Posts.find().populate("linkedUser", "username email profilePicture");
-        const randomPosts = yield Posts.aggregate([{ $sample: { size: 3 } }]);
+        const randomPosts = yield Posts.aggregate([{ $sample: { size: 17 } }]);
         const aggregatedPosts = yield Posts.populate(randomPosts, { path: "linkedUser", select: "email username profilePicture" });
         res.status(200).json(aggregatedPosts);
     }

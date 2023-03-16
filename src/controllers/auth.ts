@@ -4,8 +4,7 @@ import { Request, Response, NextFunction } from "express";
 import User from "../models/user.js"
 import bcrypt from "bcrypt"
 import { validationResult } from 'express-validator/src/validation-result.js';
-//import { sign } from 'jsonwebtoken';
-//const { sign } = require("jsonwebtoken")
+
 import jsonwebtoken from "jsonwebtoken"
 
 const { sign } = jsonwebtoken
@@ -38,7 +37,8 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
     const newUser = new User({
       username: username,
       email: email,
-      password: hashedPassword
+      password: hashedPassword,
+
     })
     const savedUser = await newUser.save()
     const token = sign({

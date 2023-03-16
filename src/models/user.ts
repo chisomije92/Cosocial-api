@@ -51,7 +51,7 @@ const UserSchema = new Schema<UserType>({
   },
   profilePicture: {
     type: String,
-    default: "",
+    default: "images/transparent-avatar.png",
   },
   followers: {
     type: [String],

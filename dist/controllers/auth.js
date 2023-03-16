@@ -12,8 +12,6 @@ import { CustomError } from '../error-model/custom-error.js';
 import User from "../models/user.js";
 import bcrypt from "bcrypt";
 import { validationResult } from 'express-validator/src/validation-result.js';
-//import { sign } from 'jsonwebtoken';
-//const { sign } = require("jsonwebtoken")
 import jsonwebtoken from "jsonwebtoken";
 const { sign } = jsonwebtoken;
 dotenv.config();
@@ -43,7 +41,7 @@ export const registerUser = (req, res, next) => __awaiter(void 0, void 0, void 0
         const newUser = new User({
             username: username,
             email: email,
-            password: hashedPassword
+            password: hashedPassword,
         });
         const savedUser = yield newUser.save();
         const token = sign({
