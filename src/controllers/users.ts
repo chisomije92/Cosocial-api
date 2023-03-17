@@ -223,7 +223,11 @@ export const followUser = async (
             $push: {
               notifications: {
                 actions: `${currentUser.username} followed you`,
-                actionUserId: currentUser.id,
+                actionUser: {
+                  email: currentUser.email,
+                  username: currentUser.username,
+                  profilePicture: currentUser.profilePicture
+                },
                 read: false,
                 dateOfAction: new Date().toISOString(),
               },
@@ -445,11 +449,13 @@ export const getNotifications = async (
   next: NextFunction
 ) => {
   try {
-    const user = await User.findById(req.userId);
+    const user = await User.findById(req.userId)
     if (!user) {
       const error = new CustomError("User does not exist", 403);
       throw error;
     }
+
+
     res.status(200).json(user.notifications);
   } catch (err: any) {
     if (!err.statusCode) {
