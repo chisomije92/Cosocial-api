@@ -47,7 +47,7 @@ export const registerUser = (req, res, next) => __awaiter(void 0, void 0, void 0
         const token = sign({
             email: savedUser.email,
             userId: savedUser._id.toString()
-        }, secret, { expiresIn: '1h' });
+        }, secret, { expiresIn: 3780000 });
         res.status(200).json({ token, userId: savedUser._id.toString() });
     }
     catch (err) {
@@ -78,7 +78,7 @@ export const loginUser = (req, res, next) => __awaiter(void 0, void 0, void 0, f
         const token = sign({
             email: user.email,
             userId: user._id.toString()
-        }, secret, { expiresIn: '1h' });
+        }, secret, { expiresIn: 3780000 });
         res.status(200).json({ token, userId: user._id.toString() });
     }
     catch (err) {

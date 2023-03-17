@@ -129,7 +129,11 @@ export const likePost = (req, res, next) => __awaiter(void 0, void 0, void 0, fu
                         $push: {
                             notifications: {
                                 actions: `${currentUser === null || currentUser === void 0 ? void 0 : currentUser.username} liked your post`,
-                                actionUserId: currentUser === null || currentUser === void 0 ? void 0 : currentUser.id,
+                                actionUser: {
+                                    email: currentUser === null || currentUser === void 0 ? void 0 : currentUser.email,
+                                    username: currentUser === null || currentUser === void 0 ? void 0 : currentUser.username,
+                                    profilePicture: currentUser === null || currentUser === void 0 ? void 0 : currentUser.profilePicture
+                                },
                                 actionPostId: post.id,
                                 read: false,
                                 dateOfAction: new Date().toISOString()
@@ -271,7 +275,11 @@ export const createComment = (req, res, next) => __awaiter(void 0, void 0, void 
             $push: {
                 notifications: {
                     actions: `${currentUser.username} replied your post`,
-                    actionPostId: post.id,
+                    actionUser: {
+                        email: currentUser === null || currentUser === void 0 ? void 0 : currentUser.email,
+                        username: currentUser === null || currentUser === void 0 ? void 0 : currentUser.username,
+                        profilePicture: currentUser === null || currentUser === void 0 ? void 0 : currentUser.profilePicture
+                    },
                     actionUserId: currentUser.id,
                     read: false,
                     dateOfAction: new Date().toISOString()

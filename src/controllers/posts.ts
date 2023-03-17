@@ -135,7 +135,11 @@ export const likePost = async (req: Request, res: Response, next: NextFunction) 
             $push: {
               notifications: {
                 actions: `${currentUser?.username} liked your post`,
-                actionUserId: currentUser?.id,
+                actionUser: {
+                  email: currentUser?.email,
+                  username: currentUser?.username,
+                  profilePicture: currentUser?.profilePicture
+                },
                 actionPostId: post.id,
                 read: false,
                 dateOfAction: new Date().toISOString()
@@ -296,7 +300,11 @@ export const createComment = async (req: Request, res: Response, next: NextFunct
       $push: {
         notifications: {
           actions: `${currentUser.username} replied your post`,
-          actionPostId: post.id,
+          actionUser: {
+            email: currentUser?.email,
+            username: currentUser?.username,
+            profilePicture: currentUser?.profilePicture
+          },
           actionUserId: currentUser.id,
           read: false,
           dateOfAction: new Date().toISOString()
