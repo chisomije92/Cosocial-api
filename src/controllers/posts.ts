@@ -138,7 +138,8 @@ export const likePost = async (req: Request, res: Response, next: NextFunction) 
                 actionUser: {
                   email: currentUser?.email,
                   username: currentUser?.username,
-                  profilePicture: currentUser?.profilePicture
+                  profilePicture: currentUser?.profilePicture,
+                  userId: currentUser?.id
                 },
                 actionPostId: post.id,
                 read: false,
@@ -168,8 +169,6 @@ export const likePost = async (req: Request, res: Response, next: NextFunction) 
 export const getPost = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const post = await Posts.findById(req.params.id).populate("linkedUser", "username email profilePicture")
-    const testPost = await Posts.find({ userId: req.userId })
-    console.log(testPost)
     if (!post) {
       const error = new CustomError("Post not found!", 404);
       throw error
@@ -303,9 +302,10 @@ export const createComment = async (req: Request, res: Response, next: NextFunct
           actionUser: {
             email: currentUser?.email,
             username: currentUser?.username,
-            profilePicture: currentUser?.profilePicture
+            profilePicture: currentUser?.profilePicture,
+            userId: currentUser?.id
           },
-          actionUserId: currentUser.id,
+          actionPostId: post.id,
           read: false,
           dateOfAction: new Date().toISOString()
         }
@@ -355,9 +355,15 @@ export const likeComment = async (req: Request, res: Response, next: NextFunctio
         await targetUser.updateOne({
           $push: {
             notifications: {
-              actions: `${currentUser?.username} liked your post`,
-              actionUserUd: currentUser.id,
+              actions: `${currentUser?.username} liked your comment`,
+              actionUser: {
+                userId: currentUser.id,
+                email: currentUser.email,
+                username: currentUser.username,
+                profilePicture: currentUser.profilePicture
+              },
               read: false,
+              actionPostId: post.id,
               dateOfAction: new Date().toISOString()
             }
           }

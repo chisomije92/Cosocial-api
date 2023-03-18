@@ -74,6 +74,9 @@ const UserSchema = new Schema({
                 },
                 profilePicture: {
                     type: String
+                },
+                userId: {
+                    type: String
                 }
             },
             actionPostId: { type: String },

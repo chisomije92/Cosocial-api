@@ -187,7 +187,8 @@ export const followUser = (req, res, next) => __awaiter(void 0, void 0, void 0, 
                                 actionUser: {
                                     email: currentUser.email,
                                     username: currentUser.username,
-                                    profilePicture: currentUser.profilePicture
+                                    profilePicture: currentUser.profilePicture,
+                                    userId: currentUser.id
                                 },
                                 read: false,
                                 dateOfAction: new Date().toISOString(),

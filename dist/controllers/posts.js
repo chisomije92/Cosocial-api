@@ -132,7 +132,8 @@ export const likePost = (req, res, next) => __awaiter(void 0, void 0, void 0, fu
                                 actionUser: {
                                     email: currentUser === null || currentUser === void 0 ? void 0 : currentUser.email,
                                     username: currentUser === null || currentUser === void 0 ? void 0 : currentUser.username,
-                                    profilePicture: currentUser === null || currentUser === void 0 ? void 0 : currentUser.profilePicture
+                                    profilePicture: currentUser === null || currentUser === void 0 ? void 0 : currentUser.profilePicture,
+                                    userId: currentUser === null || currentUser === void 0 ? void 0 : currentUser.id
                                 },
                                 actionPostId: post.id,
                                 read: false,
@@ -159,8 +160,6 @@ export const likePost = (req, res, next) => __awaiter(void 0, void 0, void 0, fu
 export const getPost = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const post = yield Posts.findById(req.params.id).populate("linkedUser", "username email profilePicture");
-        const testPost = yield Posts.find({ userId: req.userId });
-        console.log(testPost);
         if (!post) {
             const error = new CustomError("Post not found!", 404);
             throw error;
@@ -278,9 +277,10 @@ export const createComment = (req, res, next) => __awaiter(void 0, void 0, void 
                     actionUser: {
                         email: currentUser === null || currentUser === void 0 ? void 0 : currentUser.email,
                         username: currentUser === null || currentUser === void 0 ? void 0 : currentUser.username,
-                        profilePicture: currentUser === null || currentUser === void 0 ? void 0 : currentUser.profilePicture
+                        profilePicture: currentUser === null || currentUser === void 0 ? void 0 : currentUser.profilePicture,
+                        userId: currentUser === null || currentUser === void 0 ? void 0 : currentUser.id
                     },
-                    actionUserId: currentUser.id,
+                    actionPostId: post.id,
                     read: false,
                     dateOfAction: new Date().toISOString()
                 }
@@ -324,9 +324,15 @@ export const likeComment = (req, res, next) => __awaiter(void 0, void 0, void 0,
                 yield targetUser.updateOne({
                     $push: {
                         notifications: {
-                            actions: `${currentUser === null || currentUser === void 0 ? void 0 : currentUser.username} liked your post`,
-                            actionUserUd: currentUser.id,
+                            actions: `${currentUser === null || currentUser === void 0 ? void 0 : currentUser.username} liked your comment`,
+                            actionUser: {
+                                userId: currentUser.id,
+                                email: currentUser.email,
+                                username: currentUser.username,
+                                profilePicture: currentUser.profilePicture
+                            },
                             read: false,
+                            actionPostId: post.id,
                             dateOfAction: new Date().toISOString()
                         }
                     }

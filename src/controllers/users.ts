@@ -226,7 +226,8 @@ export const followUser = async (
                 actionUser: {
                   email: currentUser.email,
                   username: currentUser.username,
-                  profilePicture: currentUser.profilePicture
+                  profilePicture: currentUser.profilePicture,
+                  userId: currentUser.id
                 },
                 read: false,
                 dateOfAction: new Date().toISOString(),

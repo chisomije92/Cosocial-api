@@ -24,7 +24,8 @@ export interface UserType extends mongoose.Document {
     actionUser: {
       username: string;
       email: string;
-      profilePicture: string
+      profilePicture: string;
+      userId: string
     };
     actionPostId?: string;
     read: boolean;
@@ -109,6 +110,9 @@ const UserSchema = new Schema<UserType>({
           type: String
         },
         profilePicture: {
+          type: String
+        },
+        userId: {
           type: String
         }
       },
