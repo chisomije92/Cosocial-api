@@ -8,7 +8,12 @@ const { Schema, model } = mongoose;
 interface Reply {
   _id?: Types.ObjectId;
   comment: string;
-  commenterId: string
+  commenter: {
+    userId: string;
+    profilePicture: string;
+    email: string;
+    username: string
+  }
   dateOfReply: string
   likes: string[];
 }
@@ -49,7 +54,20 @@ const PostSchema = new Schema<PostType>({
   comments: {
     type: [{
       comment: String,
-      commenterId: String,
+      commenter: {
+        userId: {
+          type: String
+        },
+        email: {
+          type: String
+        },
+        username: {
+          type: String
+        },
+        profilePicture: {
+          type: String
+        }
+      },
       dateOfReply: String,
       likes: [String],
     }],

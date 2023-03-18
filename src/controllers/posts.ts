@@ -289,7 +289,12 @@ export const createComment = async (req: Request, res: Response, next: NextFunct
         comments: {
           comment: req.body.comment,
           dateOfReply: new Date().toISOString(),
-          commenterId: currentUser.id,
+          commenter: {
+            userId: currentUser.id,
+            email: currentUser.email,
+            profilePicture: currentUser.profilePicture,
+            username: currentUser.username
+          },
           likes: []
 
         }
@@ -350,7 +355,7 @@ export const likeComment = async (req: Request, res: Response, next: NextFunctio
       })
 
 
-      const targetUser = await Users.findById(reply.commenterId)
+      const targetUser = await Users.findById(reply.commenter.userId)
       if (targetUser?.id !== req.userId && targetUser) {
         await targetUser.updateOne({
           $push: {

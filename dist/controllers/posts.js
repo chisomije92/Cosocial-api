@@ -265,7 +265,12 @@ export const createComment = (req, res, next) => __awaiter(void 0, void 0, void 
                 comments: {
                     comment: req.body.comment,
                     dateOfReply: new Date().toISOString(),
-                    commenterId: currentUser.id,
+                    commenter: {
+                        userId: currentUser.id,
+                        email: currentUser.email,
+                        profilePicture: currentUser.profilePicture,
+                        username: currentUser.username
+                    },
                     likes: []
                 }
             }
@@ -319,7 +324,7 @@ export const likeComment = (req, res, next) => __awaiter(void 0, void 0, void 0,
                     comments: updatedComments
                 }
             });
-            const targetUser = yield Users.findById(reply.commenterId);
+            const targetUser = yield Users.findById(reply.commenter.userId);
             if ((targetUser === null || targetUser === void 0 ? void 0 : targetUser.id) !== req.userId && targetUser) {
                 yield targetUser.updateOne({
                     $push: {

@@ -22,7 +22,20 @@ const PostSchema = new Schema({
     comments: {
         type: [{
                 comment: String,
-                commenterId: String,
+                commenter: {
+                    userId: {
+                        type: String
+                    },
+                    email: {
+                        type: String
+                    },
+                    username: {
+                        type: String
+                    },
+                    profilePicture: {
+                        type: String
+                    }
+                },
                 dateOfReply: String,
                 likes: [String],
             }],
