@@ -2,13 +2,17 @@ import express from "express"
 import isAuth from "../middlewares/is-auth.js";
 import { body } from "express-validator";
 
-import { deleteUser, updateUser, getUser, followUser, unFollowUser, changePassword, getNotifications, getFollowers, getFollowing, getNotFollowing, getNonFollowers, getAuthUser } from './../controllers/users.js';
+import { deleteUser, updateUser, getUser, followUser, unFollowUser, changePassword, getNotifications, getFollowers, getFollowing, getNotFollowing, getNonFollowers, getAuthUser, readAllNotifications, unreadAllNotifications, singleNotificationRead } from './../controllers/users.js';
 
 
 const router = express.Router()
 
 router.get("/", isAuth, getAuthUser)
 router.get("/notifications", isAuth, getNotifications)
+router.put("/notifications/read", isAuth, readAllNotifications)
+
+router.put("/notifications/unread", isAuth, unreadAllNotifications)
+router.put("/notifications/read/:id", isAuth, singleNotificationRead)
 router.put("/update-password", isAuth, [
   body("oldPassword").isLength({ min: 6 }),
   body("newPassword").isLength({ min: 6 }),

@@ -15,7 +15,7 @@ interface Reply {
     username: string
   }
   dateOfReply: string
-  likes: string[];
+  likes: Types.ObjectId[];
 }
 
 export interface PostType extends mongoose.Document {
@@ -24,7 +24,7 @@ export interface PostType extends mongoose.Document {
   linkedUser: Types.ObjectId;
   description: string;
   image: string;
-  likes: string[];
+  likes: Types.ObjectId[];
   comments: Reply[]
   updatedAt: string;
   createdAt: string
@@ -48,7 +48,10 @@ const PostSchema = new Schema<PostType>({
     type: String,
   },
   likes: {
-    type: [String],
+    type: [{
+      type: Types.ObjectId,
+      ref: "Users"
+    }],
     default: []
   },
   comments: {
@@ -69,7 +72,10 @@ const PostSchema = new Schema<PostType>({
         }
       },
       dateOfReply: String,
-      likes: [String],
+      likes: [{
+        type: Types.ObjectId,
+        ref: "Users"
+      }],
     }],
     default: []
   }

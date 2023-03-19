@@ -20,6 +20,7 @@ export interface UserType extends mongoose.Document {
   relationship: Number
   bookmarks: Types.ObjectId[]
   notifications: {
+    _id?: Types.ObjectId;
     actions: string;
     actionUser: {
       username: string;
@@ -101,6 +102,7 @@ const UserSchema = new Schema<UserType>({
   ],
   notifications: [
     {
+
       actions: { type: String },
       actionUser: {
         username: {

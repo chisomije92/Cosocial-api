@@ -387,4 +387,70 @@ export const getNotifications = (req, res, next) => __awaiter(void 0, void 0, vo
         next(err);
     }
 });
+export const readAllNotifications = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const user = yield User.findById(req.userId);
+        if (!user) {
+            const error = new CustomError("User does not exist", 403);
+            throw error;
+        }
+        const notifications = user.notifications.map((n) => (Object.assign(Object.assign({}, n), { read: true })));
+        user.notifications = notifications;
+        yield user.save();
+        res.status(200).json("Notifications are now marked as read");
+    }
+    catch (err) {
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
+    }
+});
+export const unreadAllNotifications = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const user = yield User.findById(req.userId);
+        if (!user) {
+            const error = new CustomError("User does not exist", 403);
+            throw error;
+        }
+        const notifications = user.notifications.map((n) => (Object.assign(Object.assign({}, n), { read: false })));
+        user.notifications = notifications;
+        yield user.save();
+        res.status(200).json("Notifications are now marked as unread");
+    }
+    catch (err) {
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
+    }
+});
+export const singleNotificationRead = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const user = yield User.findById(req.userId);
+        if (!user) {
+            const error = new CustomError("User does not exist", 403);
+            throw error;
+        }
+        const notifications = [...user.notifications];
+        const notification = notifications.find(n => n._id.toString() == req.params.id);
+        if (notification) {
+            const updatedNotification = Object.assign(Object.assign({}, notification), { read: true });
+            const notificationIndex = notifications.findIndex(n => n._id.toString() == req.params.id);
+            notifications[notificationIndex] = Object.assign({}, updatedNotification);
+            user.notifications = notifications;
+            yield user.save();
+        }
+        else {
+            throw new CustomError("Notification not found", 404);
+        }
+        res.status(200).json("Notification marked as read");
+    }
+    catch (err) {
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
+    }
+});
 //# sourceMappingURL=users.js.map

@@ -465,3 +465,92 @@ export const getNotifications = async (
     next(err);
   }
 };
+
+
+export const readAllNotifications = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const user = await User.findById(req.userId)
+    if (!user) {
+      const error = new CustomError("User does not exist", 403);
+      throw error;
+    }
+    const notifications = user.notifications.map((n) => ({
+      ...n,
+      read: true
+    }))
+    user.notifications = notifications
+    await user.save()
+
+    res.status(200).json("Notifications are now marked as read");
+  } catch (err: any) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+};
+
+export const unreadAllNotifications = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const user = await User.findById(req.userId)
+    if (!user) {
+      const error = new CustomError("User does not exist", 403);
+      throw error;
+    }
+    const notifications = user.notifications.map((n) => ({
+      ...n,
+      read: false
+    }))
+    user.notifications = notifications
+    await user.save()
+    res.status(200).json("Notifications are now marked as unread");
+  } catch (err: any) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+};
+
+export const singleNotificationRead = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const user = await User.findById(req.userId)
+    if (!user) {
+      const error = new CustomError("User does not exist", 403);
+      throw error;
+    }
+
+    const notifications = [...user.notifications]
+    const notification = notifications.find(n => n._id!.toString() == req.params.id)
+    if (notification) {
+      const updatedNotification = { ...notification, read: true }
+      const notificationIndex = notifications.findIndex(n => n._id!.toString() == req.params.id)
+      notifications[notificationIndex] = { ...updatedNotification }
+      user.notifications = notifications
+      await user.save()
+    } else {
+      throw new CustomError("Notification not found", 404)
+    }
+
+
+
+    res.status(200).json("Notification marked as read");
+  } catch (err: any) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+}

@@ -12,6 +12,7 @@ import { CustomError } from './../error-model/custom-error.js';
 import Posts from "../models/posts.js";
 import Users from "../models/user.js";
 import { clearImage } from '../utils/utils.js';
+import { Types } from 'mongoose';
 const __dirname = resolve();
 export const createPosts = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
@@ -93,12 +94,22 @@ export const deletePost = (req, res, next) => __awaiter(void 0, void 0, void 0, 
 });
 export const getUserPosts = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        const query = [
+            {
+                path: 'linkedUser',
+                select: 'username email profilePicture _id'
+            },
+            {
+                path: 'likes',
+                select: 'username email profilePicture _id'
+            }
+        ];
         const currentUser = yield Users.findById(req.params.id);
         if (!currentUser) {
             const error = new CustomError("User not found!", 404);
             throw error;
         }
-        const userPosts = yield Posts.find({ userId: currentUser._id });
+        const userPosts = yield Posts.find({ userId: currentUser._id }).populate(query);
         res.status(200).json(userPosts);
     }
     catch (err) {
@@ -122,8 +133,8 @@ export const likePost = (req, res, next) => __awaiter(void 0, void 0, void 0, fu
         }
         if (req.userId) {
             const currentUser = yield Users.findById(req.userId);
-            if (!post.likes.includes(req.userId)) {
-                yield post.updateOne({ $push: { likes: req.userId } });
+            if (!post.likes.includes(new Types.ObjectId(req.userId))) {
+                yield post.updateOne({ $push: { likes: new Types.ObjectId(req.userId) } });
                 if (targetUser.id !== req.userId) {
                     yield targetUser.updateOne({
                         $push: {
@@ -145,7 +156,7 @@ export const likePost = (req, res, next) => __awaiter(void 0, void 0, void 0, fu
                 res.status(200).json("User liked post!");
             }
             else {
-                yield post.updateOne({ $pull: { likes: req.userId } });
+                yield post.updateOne({ $pull: { likes: new Types.ObjectId(req.userId) } });
                 res.status(403).json("Like removed from post");
             }
         }
@@ -158,8 +169,18 @@ export const likePost = (req, res, next) => __awaiter(void 0, void 0, void 0, fu
     }
 });
 export const getPost = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const query = [
+        {
+            path: 'linkedUser',
+            select: 'username email profilePicture _id'
+        },
+        {
+            path: 'likes',
+            select: 'username email profilePicture _id'
+        }
+    ];
     try {
-        const post = yield Posts.findById(req.params.id).populate("linkedUser", "username email profilePicture");
+        const post = yield Posts.findById(req.params.id).populate(query);
         if (!post) {
             const error = new CustomError("Post not found!", 404);
             throw error;
@@ -180,8 +201,18 @@ export const getPostsOnTL = (req, res, next) => __awaiter(void 0, void 0, void 0
             const error = new CustomError("User not found!", 404);
             throw error;
         }
-        const userPosts = yield Posts.find({ userId: currentUser._id }).populate("linkedUser", "username email profilePicture");
-        const friendPosts = yield Promise.all(currentUser.following.map(friendId => { return Posts.find({ userId: friendId }).populate("linkedUser", "username email profilePicture"); }));
+        const query = [
+            {
+                path: 'linkedUser',
+                select: 'username email profilePicture _id'
+            },
+            {
+                path: 'likes',
+                select: 'username email profilePicture _id'
+            }
+        ];
+        const userPosts = yield Posts.find({ userId: currentUser._id }).populate(query);
+        const friendPosts = yield Promise.all(currentUser.following.map(friendId => { return Posts.find({ userId: friendId }).populate(query); }));
         res.status(200).json(userPosts.concat(...friendPosts));
     }
     catch (err) {
@@ -192,10 +223,19 @@ export const getPostsOnTL = (req, res, next) => __awaiter(void 0, void 0, void 0
     }
 });
 export const getPostsOnExplore = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const query = [
+        {
+            path: 'linkedUser',
+            select: 'username email profilePicture _id'
+        },
+        {
+            path: 'likes',
+            select: 'username email profilePicture _id'
+        }
+    ];
     try {
-        const posts = yield Posts.find().populate("linkedUser", "username email profilePicture");
         const randomPosts = yield Posts.aggregate([{ $sample: { size: 17 } }]);
-        const aggregatedPosts = yield Posts.populate(randomPosts, { path: "linkedUser", select: "email username profilePicture" });
+        const aggregatedPosts = yield Posts.populate(randomPosts, query);
         res.status(200).json(aggregatedPosts);
     }
     catch (err) {
@@ -315,8 +355,8 @@ export const likeComment = (req, res, next) => __awaiter(void 0, void 0, void 0,
             throw new CustomError("Reply not found", 404);
         }
         const indexOfReply = post.comments.findIndex(p => { var _a; return ((_a = p._id) === null || _a === void 0 ? void 0 : _a.toString()) === req.body.replyId; });
-        if (!(reply === null || reply === void 0 ? void 0 : reply.likes.includes(req.userId))) {
-            const likesInReply = reply.likes.concat(req.userId);
+        if (!(reply === null || reply === void 0 ? void 0 : reply.likes.includes(new Types.ObjectId(req.userId)))) {
+            const likesInReply = reply.likes.concat(new Types.ObjectId(req.userId));
             post.comments[indexOfReply].likes = likesInReply;
             const updatedComments = [...post.comments];
             yield post.updateOne({
@@ -346,7 +386,7 @@ export const likeComment = (req, res, next) => __awaiter(void 0, void 0, void 0,
             res.status(200).json("User liked comment!");
         }
         else {
-            const likesInReply = reply.likes.filter(id => id !== req.userId);
+            const likesInReply = reply.likes.filter(id => id !== new Types.ObjectId(req.userId));
             post.comments[indexOfReply].likes = likesInReply;
             const updatedComments = [...post.comments];
             yield post.updateOne({

@@ -5,6 +5,7 @@ import Posts from "../models/posts.js";
 import { Request, Response, NextFunction } from "express";
 import Users from "../models/user.js";
 import { clearImage } from '../utils/utils.js';
+import { Types } from 'mongoose';
 
 
 const __dirname = resolve()
@@ -95,14 +96,25 @@ export const deletePost = async (req: Request, res: Response, next: NextFunction
 }
 
 export const getUserPosts = async (req: Request, res: Response, next: NextFunction) => {
+
   try {
+    const query = [
+      {
+        path: 'linkedUser',
+        select: 'username email profilePicture _id'
+      },
+      {
+        path: 'likes',
+        select: 'username email profilePicture _id'
+      }
+    ];
     const currentUser = await Users.findById(req.params.id)
 
     if (!currentUser) {
       const error = new CustomError("User not found!", 404);
       throw error;
     }
-    const userPosts = await Posts.find({ userId: currentUser._id })
+    const userPosts = await Posts.find({ userId: currentUser._id }).populate(query)
     res.status(200).json(userPosts)
   } catch (err: any) {
     if (!err.statusCode) {
@@ -128,8 +140,8 @@ export const likePost = async (req: Request, res: Response, next: NextFunction) 
     }
     if (req.userId) {
       const currentUser = await Users.findById(req.userId)
-      if (!post.likes.includes(req.userId)) {
-        await post.updateOne({ $push: { likes: req.userId } })
+      if (!post.likes.includes(new Types.ObjectId(req.userId))) {
+        await post.updateOne({ $push: { likes: new Types.ObjectId(req.userId) } })
         if (targetUser.id !== req.userId) {
           await targetUser.updateOne({
             $push: {
@@ -152,7 +164,7 @@ export const likePost = async (req: Request, res: Response, next: NextFunction) 
         res.status(200).json("User liked post!")
 
       } else {
-        await post.updateOne({ $pull: { likes: req.userId } })
+        await post.updateOne({ $pull: { likes: new Types.ObjectId(req.userId) } })
         res.status(403).json("Like removed from post")
       }
     }
@@ -167,8 +179,19 @@ export const likePost = async (req: Request, res: Response, next: NextFunction) 
 }
 
 export const getPost = async (req: Request, res: Response, next: NextFunction) => {
+  const query = [
+    {
+      path: 'linkedUser',
+      select: 'username email profilePicture _id'
+    },
+    {
+      path: 'likes',
+      select: 'username email profilePicture _id'
+    }
+  ];
   try {
-    const post = await Posts.findById(req.params.id).populate("linkedUser", "username email profilePicture")
+    const post = await Posts.findById(req.params.id).populate(query)
+
     if (!post) {
       const error = new CustomError("Post not found!", 404);
       throw error
@@ -192,9 +215,20 @@ export const getPostsOnTL = async (req: Request, res: Response, next: NextFuncti
       const error = new CustomError("User not found!", 404);
       throw error;
     }
-    const userPosts = await Posts.find({ userId: currentUser._id }).populate("linkedUser", "username email profilePicture")
+    const query = [
+      {
+        path: 'linkedUser',
+        select: 'username email profilePicture _id'
+      },
+      {
+        path: 'likes',
+        select: 'username email profilePicture _id'
+      }
+    ];
+    const userPosts = await Posts.find({ userId: currentUser._id }).populate(query)
+
     const friendPosts = await Promise.all<any[]>(
-      currentUser.following.map(friendId => { return Posts.find({ userId: friendId }).populate("linkedUser", "username email profilePicture") })
+      currentUser.following.map(friendId => { return Posts.find({ userId: friendId }).populate(query) })
     )
 
     res.status(200).json(userPosts.concat(...friendPosts))
@@ -210,10 +244,19 @@ export const getPostsOnTL = async (req: Request, res: Response, next: NextFuncti
 }
 
 export const getPostsOnExplore = async (req: Request, res: Response, next: NextFunction) => {
+  const query = [
+    {
+      path: 'linkedUser',
+      select: 'username email profilePicture _id'
+    },
+    {
+      path: 'likes',
+      select: 'username email profilePicture _id'
+    }
+  ];
   try {
-    const posts = await Posts.find().populate("linkedUser", "username email profilePicture")
     const randomPosts = await Posts.aggregate([{ $sample: { size: 17 } }])
-    const aggregatedPosts = await Posts.populate(randomPosts, { path: "linkedUser", select: "email username profilePicture" })
+    const aggregatedPosts = await Posts.populate(randomPosts, query)
 
     res.status(200).json(aggregatedPosts)
 
@@ -256,6 +299,7 @@ export const bookmarkPost = async (req: Request, res: Response, next: NextFuncti
 }
 
 export const getAllBookmarks = async (req: Request, res: Response, next: NextFunction) => {
+
   try {
     const user = await Users.findById(req.userId).populate("bookmarks")
     if (!user) {
@@ -344,8 +388,8 @@ export const likeComment = async (req: Request, res: Response, next: NextFunctio
     const indexOfReply = post.comments.findIndex(p => p._id?.toString() === req.body.replyId)
 
 
-    if (!reply?.likes.includes(req.userId)) {
-      const likesInReply = reply.likes.concat(req.userId)
+    if (!reply?.likes.includes(new Types.ObjectId(req.userId))) {
+      const likesInReply = reply.likes.concat(new Types.ObjectId(req.userId))
       post.comments[indexOfReply].likes = likesInReply
       const updatedComments = [...post.comments]
       await post.updateOne({
@@ -377,7 +421,7 @@ export const likeComment = async (req: Request, res: Response, next: NextFunctio
       res.status(200).json("User liked comment!")
     }
     else {
-      const likesInReply = reply.likes.filter(id => id !== req.userId)
+      const likesInReply = reply.likes.filter(id => id !== new Types.ObjectId(req.userId!))
       post.comments[indexOfReply].likes = likesInReply
       const updatedComments = [...post.comments]
 

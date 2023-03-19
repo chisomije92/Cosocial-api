@@ -1,5 +1,5 @@
 /** @format */
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
 const { Schema, model } = mongoose;
 const PostSchema = new Schema({
     linkedUser: {
@@ -16,7 +16,10 @@ const PostSchema = new Schema({
         type: String,
     },
     likes: {
-        type: [String],
+        type: [{
+                type: Types.ObjectId,
+                ref: "Users"
+            }],
         default: []
     },
     comments: {
@@ -37,7 +40,10 @@ const PostSchema = new Schema({
                     }
                 },
                 dateOfReply: String,
-                likes: [String],
+                likes: [{
+                        type: Types.ObjectId,
+                        ref: "Users"
+                    }],
             }],
         default: []
     }
