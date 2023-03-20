@@ -147,7 +147,18 @@ export const getUser = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
 });
 export const getAuthUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const user = yield User.findById(req.userId);
+        const user = yield User.findById(req.userId).populate({
+            path: 'bookmarks',
+            populate: [{
+                    path: 'linkedUser',
+                    model: 'Users',
+                    select: "email username profilePicture _id"
+                }, {
+                    path: 'likes',
+                    model: 'Users',
+                    select: 'email username profilePicture _id'
+                }]
+        });
         if (!user) {
             throw new CustomError("User does not exist", 404);
         }

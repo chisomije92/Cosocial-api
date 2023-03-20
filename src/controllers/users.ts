@@ -178,7 +178,18 @@ export const getAuthUser = async (
   next: NextFunction
 ) => {
   try {
-    const user = await User.findById(req.userId);
+    const user = await User.findById(req.userId).populate({
+      path: 'bookmarks',
+      populate: [{
+        path: 'linkedUser',
+        model: 'Users',
+        select: "email username profilePicture _id"
+      }, {
+        path: 'likes',
+        model: 'Users',
+        select: 'email username profilePicture _id'
+      }]
+    })
     if (!user) {
       throw new CustomError("User does not exist", 404);
     }
