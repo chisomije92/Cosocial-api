@@ -44,7 +44,7 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
     const token = sign({
       email: savedUser.email,
       userId: savedUser._id.toString()
-    }, secret, { expiresIn: 3780000 })
+    }, secret, { expiresIn: "2d" })
     res.status(200).json({ token, userId: savedUser._id.toString() })
 
 
@@ -82,7 +82,7 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
     const token = sign({
       email: user.email,
       userId: user._id.toString()
-    }, secret, { expiresIn: 3780000 })
+    }, secret, { expiresIn: "2d" })
     res.status(200).json({ token, userId: user._id.toString() })
   } catch (err: any) {
     if (!err.statusCode) {
