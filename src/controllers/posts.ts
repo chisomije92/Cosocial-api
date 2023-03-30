@@ -6,13 +6,14 @@ import { Request, Response, NextFunction } from "express";
 import Users from "../models/user.js";
 import { clearImage } from '../utils/utils.js';
 import { Types } from 'mongoose';
+import { getIO } from "../socket/index.js";
+
 
 
 const __dirname = resolve()
 export const createPosts = async (req: Request, res: Response, next: NextFunction) => {
   const image = req.file?.path;
   const description: string = req.body.description;
-
 
   let imageUrl = image
   if (req.file) {
@@ -22,6 +23,23 @@ export const createPosts = async (req: Request, res: Response, next: NextFunctio
   try {
     const newPost = new Posts({ description, image: imageUrl, userId: req.userId, linkedUser: req.userId })
     const savedPost = await newPost.save()
+    const user = await Users.findById(req.userId);
+    if (!user) {
+      throw new CustomError("User does not exist", 404)
+    }
+    const userSocket = getIO().emit("posts", {
+      action: "create",
+      post: {
+        ...savedPost.toObject(),
+        //savedPost
+        linkedUser: {
+          username: user.username,
+          email: user.email,
+          profilePicture: user.profilePicture,
+          _id: user._id
+        },
+      }
+    })
     res.status(200).json(savedPost)
   } catch (err: any) {
     if (!err.statusCode) {

@@ -11,7 +11,14 @@ import cors from 'cors';
 import { v4 as uuidv4 } from "uuid";
 import multer from "multer";
 import path from "path";
+import { createServer } from "http";
+import { init } from "./socket/index.js";
 const app = express();
+const httpServer = createServer(app);
+const io = init(httpServer);
+//io.on("connection", (socket: Socket) => {
+//  console.log("New client connected");
+//});
 const __dirname = path.resolve();
 dotenv.config();
 const { MONGO_URL } = process.env;
@@ -62,8 +69,11 @@ app.use((error, req, res, next) => {
 });
 if (MONGO_URL) {
     mongoose.connect(MONGO_URL)
-        .then(() => console.log("Connected to Mongo db")).then(() => app.listen(8000, () => {
-        console.log("Server is running");
-    }));
+        .then(() => console.log("Connected to Mongo db")).then(() => {
+        httpServer.listen(8000);
+        io.on("connection", (socket) => {
+            console.log("New client connected");
+        });
+    });
 }
 //# sourceMappingURL=index.js.map

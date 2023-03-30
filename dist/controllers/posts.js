@@ -13,6 +13,7 @@ import Posts from "../models/posts.js";
 import Users from "../models/user.js";
 import { clearImage } from '../utils/utils.js';
 import { Types } from 'mongoose';
+import { getIO } from "../socket/index.js";
 const __dirname = resolve();
 export const createPosts = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
@@ -25,6 +26,21 @@ export const createPosts = (req, res, next) => __awaiter(void 0, void 0, void 0,
     try {
         const newPost = new Posts({ description, image: imageUrl, userId: req.userId, linkedUser: req.userId });
         const savedPost = yield newPost.save();
+        const user = yield Users.findById(req.userId);
+        if (!user) {
+            throw new CustomError("User does not exist", 404);
+        }
+        const userSocket = getIO().emit("posts", {
+            action: "create",
+            post: Object.assign(Object.assign({}, savedPost.toObject()), { 
+                //savedPost
+                linkedUser: {
+                    username: user.username,
+                    email: user.email,
+                    profilePicture: user.profilePicture,
+                    _id: user._id
+                } })
+        });
         res.status(200).json(savedPost);
     }
     catch (err) {
