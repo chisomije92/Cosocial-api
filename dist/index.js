@@ -1,6 +1,5 @@
 import express from "express";
 import mongoose from "mongoose";
-//const helmet = require("helmet")
 import helmet from "helmet";
 import morgan from "morgan";
 import dotenv from "dotenv";
@@ -16,9 +15,6 @@ import { init } from "./socket/index.js";
 const app = express();
 const httpServer = createServer(app);
 const io = init(httpServer);
-//io.on("connection", (socket: Socket) => {
-//  console.log("New client connected");
-//});
 const __dirname = path.resolve();
 dotenv.config();
 const { MONGO_URL } = process.env;

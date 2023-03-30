@@ -30,11 +30,9 @@ export const createPosts = (req, res, next) => __awaiter(void 0, void 0, void 0,
         if (!user) {
             throw new CustomError("User does not exist", 404);
         }
-        const userSocket = getIO().emit("posts", {
+        getIO().emit("posts", {
             action: "create",
-            post: Object.assign(Object.assign({}, savedPost.toObject()), { 
-                //savedPost
-                linkedUser: {
+            post: Object.assign(Object.assign({}, savedPost.toObject()), { linkedUser: {
                     username: user.username,
                     email: user.email,
                     profilePicture: user.profilePicture,
@@ -70,6 +68,19 @@ export const updatePost = (req, res, next) => __awaiter(void 0, void 0, void 0, 
                 post.image = imageUrl;
             }
             yield post.save();
+            const user = yield Users.findById(req.userId);
+            if (!user) {
+                throw new CustomError("User does not exist", 404);
+            }
+            getIO().emit("posts", {
+                action: "update",
+                post: Object.assign(Object.assign({}, post.toObject()), { linkedUser: {
+                        username: user.username,
+                        email: user.email,
+                        profilePicture: user.profilePicture,
+                        _id: user._id
+                    } })
+            });
             res.status(200).json("Post updated successfully");
         }
         else {
@@ -92,8 +103,18 @@ export const deletePost = (req, res, next) => __awaiter(void 0, void 0, void 0, 
             throw error;
         }
         if (post.userId === req.userId) {
-            clearImage(post.image, __dirname);
+            if (post.image) {
+                clearImage(post.image, __dirname);
+            }
             yield post.deleteOne();
+            const user = yield Users.findById(req.userId);
+            if (!user) {
+                throw new CustomError("User does not exist", 404);
+            }
+            getIO().emit("posts", {
+                action: "delete",
+                post: Object.assign({}, post.toObject())
+            });
             res.status(200).json("Post deleted successfully");
         }
         else {

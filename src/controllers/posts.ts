@@ -27,11 +27,10 @@ export const createPosts = async (req: Request, res: Response, next: NextFunctio
     if (!user) {
       throw new CustomError("User does not exist", 404)
     }
-    const userSocket = getIO().emit("posts", {
+    getIO().emit("posts", {
       action: "create",
       post: {
         ...savedPost.toObject(),
-        //savedPost
         linkedUser: {
           username: user.username,
           email: user.email,
@@ -51,6 +50,7 @@ export const createPosts = async (req: Request, res: Response, next: NextFunctio
 }
 
 export const updatePost = async (req: Request, res: Response, next: NextFunction) => {
+
   const updatedDescription = req.body.description
   const updatedImage = req.file?.path;
   let imageUrl = updatedImage
@@ -71,6 +71,22 @@ export const updatePost = async (req: Request, res: Response, next: NextFunction
         post.image = imageUrl
       }
       await post.save()
+      const user = await Users.findById(req.userId);
+      if (!user) {
+        throw new CustomError("User does not exist", 404)
+      }
+      getIO().emit("posts", {
+        action: "update",
+        post: {
+          ...post.toObject(),
+          linkedUser: {
+            username: user.username,
+            email: user.email,
+            profilePicture: user.profilePicture,
+            _id: user._id
+          },
+        }
+      })
 
       res.status(200).json("Post updated successfully")
 
@@ -96,8 +112,21 @@ export const deletePost = async (req: Request, res: Response, next: NextFunction
       throw error;
     }
     if (post.userId === req.userId) {
-      clearImage(post.image, __dirname)
+      if (post.image) {
+        clearImage(post.image, __dirname)
+      }
+
       await post.deleteOne()
+      const user = await Users.findById(req.userId);
+      if (!user) {
+        throw new CustomError("User does not exist", 404)
+      }
+      getIO().emit("posts", {
+        action: "delete",
+        post: {
+          ...post.toObject(),
+        }
+      })
       res.status(200).json("Post deleted successfully")
 
     } else {
