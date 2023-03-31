@@ -190,10 +190,28 @@ export const likePost = (req, res, next) => __awaiter(void 0, void 0, void 0, fu
                         }
                     });
                 }
+                getIO().emit("posts", {
+                    action: "like",
+                    post: Object.assign(Object.assign({}, post.toObject()), { linkedUser: {
+                            username: targetUser.username,
+                            email: targetUser.email,
+                            profilePicture: targetUser.profilePicture,
+                            _id: targetUser._id
+                        } })
+                });
                 res.status(200).json("User liked post!");
             }
             else {
                 yield post.updateOne({ $pull: { likes: new Types.ObjectId(req.userId) } });
+                getIO().emit("posts", {
+                    action: "unlike",
+                    post: Object.assign(Object.assign({}, post.toObject()), { linkedUser: {
+                            username: targetUser.username,
+                            email: targetUser.email,
+                            profilePicture: targetUser.profilePicture,
+                            _id: targetUser._id
+                        } })
+                });
                 res.status(403).json("Like removed from post");
             }
         }

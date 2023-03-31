@@ -207,11 +207,35 @@ export const likePost = async (req: Request, res: Response, next: NextFunction) 
             }
           })
         }
-
+        getIO().emit("posts", {
+          action: "like",
+          post: {
+            ...post.toObject(),
+            linkedUser: {
+              username: targetUser.username,
+              email: targetUser.email,
+              profilePicture: targetUser.profilePicture,
+              _id: targetUser._id
+            },
+          }
+        })
         res.status(200).json("User liked post!")
 
       } else {
         await post.updateOne({ $pull: { likes: new Types.ObjectId(req.userId) } })
+        getIO().emit("posts", {
+          action: "unlike",
+          post: {
+            ...post.toObject(),
+            linkedUser: {
+              username: targetUser.username,
+              email: targetUser.email,
+              profilePicture: targetUser.profilePicture,
+              _id: targetUser._id
+            },
+
+          }
+        })
         res.status(403).json("Like removed from post")
       }
     }
