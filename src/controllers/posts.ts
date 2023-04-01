@@ -1,12 +1,13 @@
 import { join, resolve } from 'path';
 
 import { CustomError } from './../error-model/custom-error.js';
-import Posts from "../models/posts.js";
+import Posts, { PostType } from "../models/posts.js";
 import { Request, Response, NextFunction } from "express";
 import Users from "../models/user.js";
 import { clearImage } from '../utils/utils.js';
-import { Types } from 'mongoose';
+import { Document, Types } from 'mongoose';
 import { getIO } from "../socket/index.js";
+import posts from '../models/posts.js';
 
 
 
@@ -176,6 +177,7 @@ export const likePost = async (req: Request, res: Response, next: NextFunction) 
   try {
     const post = await Posts.findById(req.params.id)
 
+
     if (!post) {
       const error = new CustomError("Post does not exist", 404);
       throw error;
@@ -185,10 +187,23 @@ export const likePost = async (req: Request, res: Response, next: NextFunction) 
       const error = new CustomError("User does not exist", 404);
       throw error;
     }
+
+    let updatedLikes: Types.ObjectId[]
+    let updatedPost: (Document<unknown, {}, PostType> & Omit<PostType & Required<{
+      _id: Types.ObjectId;
+    }>, never>) | null
     if (req.userId) {
       const currentUser = await Users.findById(req.userId)
       if (!post.likes.includes(new Types.ObjectId(req.userId))) {
-        await post.updateOne({ $push: { likes: new Types.ObjectId(req.userId) } })
+        updatedLikes = post.likes.concat(new Types.ObjectId(req.userId))
+        //await post.updateOne({ $push: { likes: new Types.ObjectId(req.userId) } })
+        updatedPost = await Posts.findOneAndUpdate({ _id: req.params.id }, { likes: updatedLikes }, {
+          new: true
+        })
+        if (!updatePost) {
+          throw new CustomError("Operation failed", 500)
+        }
+
         if (targetUser.id !== req.userId) {
           await targetUser.updateOne({
             $push: {
@@ -207,37 +222,35 @@ export const likePost = async (req: Request, res: Response, next: NextFunction) 
             }
           })
         }
-        getIO().emit("posts", {
-          action: "like",
-          post: {
-            ...post.toObject(),
-            linkedUser: {
-              username: targetUser.username,
-              email: targetUser.email,
-              profilePicture: targetUser.profilePicture,
-              _id: targetUser._id
-            },
-          }
-        })
+
         res.status(200).json("User liked post!")
 
       } else {
-        await post.updateOne({ $pull: { likes: new Types.ObjectId(req.userId) } })
-        getIO().emit("posts", {
-          action: "unlike",
-          post: {
-            ...post.toObject(),
-            linkedUser: {
-              username: targetUser.username,
-              email: targetUser.email,
-              profilePicture: targetUser.profilePicture,
-              _id: targetUser._id
-            },
-
-          }
+        updatedLikes = post.likes.filter(id => id.toString() !== req.userId)
+        //await post.updateOne({ $push: { likes: new Types.ObjectId(req.userId) } })
+        updatedPost = await Posts.findOneAndUpdate({ _id: req.params.id }, { likes: updatedLikes }, {
+          new: true
         })
         res.status(403).json("Like removed from post")
       }
+      getIO().emit("posts", {
+        action: "like",
+        post: {
+          ...post.toObject(),
+          linkedUser: {
+            username: currentUser?.username,
+            email: currentUser?.email,
+            profilePicture: currentUser?.profilePicture,
+            _id: currentUser?._id
+          },
+          likes: updatedPost!.likes.map(like => ({
+            username: currentUser?.username,
+            email: currentUser?.email,
+            profilePicture: currentUser?.profilePicture,
+            _id: currentUser?._id
+          })),
+        }
+      })
     }
 
   } catch (err: any) {

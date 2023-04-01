@@ -168,10 +168,19 @@ export const likePost = (req, res, next) => __awaiter(void 0, void 0, void 0, fu
             const error = new CustomError("User does not exist", 404);
             throw error;
         }
+        let updatedLikes;
+        let updatedPost;
         if (req.userId) {
             const currentUser = yield Users.findById(req.userId);
             if (!post.likes.includes(new Types.ObjectId(req.userId))) {
-                yield post.updateOne({ $push: { likes: new Types.ObjectId(req.userId) } });
+                updatedLikes = post.likes.concat(new Types.ObjectId(req.userId));
+                //await post.updateOne({ $push: { likes: new Types.ObjectId(req.userId) } })
+                updatedPost = yield Posts.findOneAndUpdate({ _id: req.params.id }, { likes: updatedLikes }, {
+                    new: true
+                });
+                if (!updatePost) {
+                    throw new CustomError("Operation failed", 500);
+                }
                 if (targetUser.id !== req.userId) {
                     yield targetUser.updateOne({
                         $push: {
@@ -190,30 +199,30 @@ export const likePost = (req, res, next) => __awaiter(void 0, void 0, void 0, fu
                         }
                     });
                 }
-                getIO().emit("posts", {
-                    action: "like",
-                    post: Object.assign(Object.assign({}, post.toObject()), { linkedUser: {
-                            username: targetUser.username,
-                            email: targetUser.email,
-                            profilePicture: targetUser.profilePicture,
-                            _id: targetUser._id
-                        } })
-                });
                 res.status(200).json("User liked post!");
             }
             else {
-                yield post.updateOne({ $pull: { likes: new Types.ObjectId(req.userId) } });
-                getIO().emit("posts", {
-                    action: "unlike",
-                    post: Object.assign(Object.assign({}, post.toObject()), { linkedUser: {
-                            username: targetUser.username,
-                            email: targetUser.email,
-                            profilePicture: targetUser.profilePicture,
-                            _id: targetUser._id
-                        } })
+                updatedLikes = post.likes.filter(id => id.toString() !== req.userId);
+                //await post.updateOne({ $push: { likes: new Types.ObjectId(req.userId) } })
+                updatedPost = yield Posts.findOneAndUpdate({ _id: req.params.id }, { likes: updatedLikes }, {
+                    new: true
                 });
                 res.status(403).json("Like removed from post");
             }
+            getIO().emit("posts", {
+                action: "like",
+                post: Object.assign(Object.assign({}, post.toObject()), { linkedUser: {
+                        username: currentUser === null || currentUser === void 0 ? void 0 : currentUser.username,
+                        email: currentUser === null || currentUser === void 0 ? void 0 : currentUser.email,
+                        profilePicture: currentUser === null || currentUser === void 0 ? void 0 : currentUser.profilePicture,
+                        _id: currentUser === null || currentUser === void 0 ? void 0 : currentUser._id
+                    }, likes: updatedPost.likes.map(like => ({
+                        username: currentUser === null || currentUser === void 0 ? void 0 : currentUser.username,
+                        email: currentUser === null || currentUser === void 0 ? void 0 : currentUser.email,
+                        profilePicture: currentUser === null || currentUser === void 0 ? void 0 : currentUser.profilePicture,
+                        _id: currentUser === null || currentUser === void 0 ? void 0 : currentUser._id
+                    })) })
+            });
         }
     }
     catch (err) {
