@@ -224,7 +224,6 @@ export const likePost = (req, res, next) => __awaiter(void 0, void 0, void 0, fu
                         _id: user === null || user === void 0 ? void 0 : user._id
                     });
                 })));
-                console.log(postLikes);
                 res.status(403).json("Like removed from post");
             }
             getIO().emit("posts", {

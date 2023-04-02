@@ -255,10 +255,8 @@ export const likePost = async (req: Request, res: Response, next: NextFunction) 
           }
           )
         )
-        console.log(postLikes)
         res.status(403).json("Like removed from post")
       }
-
       getIO().emit("posts", {
         action: "like",
         post: {
