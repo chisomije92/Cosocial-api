@@ -170,11 +170,11 @@ export const likePost = (req, res, next) => __awaiter(void 0, void 0, void 0, fu
         }
         let updatedLikes;
         let updatedPost;
+        let postLikes;
         if (req.userId) {
             const currentUser = yield Users.findById(req.userId);
             if (!post.likes.includes(new Types.ObjectId(req.userId))) {
                 updatedLikes = post.likes.concat(new Types.ObjectId(req.userId));
-                //await post.updateOne({ $push: { likes: new Types.ObjectId(req.userId) } })
                 updatedPost = yield Posts.findOneAndUpdate({ _id: req.params.id }, { likes: updatedLikes }, {
                     new: true
                 });
@@ -199,14 +199,32 @@ export const likePost = (req, res, next) => __awaiter(void 0, void 0, void 0, fu
                         }
                     });
                 }
+                postLikes = yield Promise.all(updatedLikes.map((like) => __awaiter(void 0, void 0, void 0, function* () {
+                    const user = yield Users.findById(like);
+                    return ({
+                        username: user === null || user === void 0 ? void 0 : user.username,
+                        email: user === null || user === void 0 ? void 0 : user.email,
+                        profilePicture: user === null || user === void 0 ? void 0 : user.profilePicture,
+                        _id: user === null || user === void 0 ? void 0 : user._id
+                    });
+                })));
                 res.status(200).json("User liked post!");
             }
             else {
                 updatedLikes = post.likes.filter(id => id.toString() !== req.userId);
-                //await post.updateOne({ $push: { likes: new Types.ObjectId(req.userId) } })
                 updatedPost = yield Posts.findOneAndUpdate({ _id: req.params.id }, { likes: updatedLikes }, {
                     new: true
                 });
+                postLikes = yield Promise.all(updatedLikes.map((like) => __awaiter(void 0, void 0, void 0, function* () {
+                    const user = yield Users.findById(like);
+                    return ({
+                        username: user === null || user === void 0 ? void 0 : user.username,
+                        email: user === null || user === void 0 ? void 0 : user.email,
+                        profilePicture: user === null || user === void 0 ? void 0 : user.profilePicture,
+                        _id: user === null || user === void 0 ? void 0 : user._id
+                    });
+                })));
+                console.log(postLikes);
                 res.status(403).json("Like removed from post");
             }
             getIO().emit("posts", {
@@ -216,12 +234,7 @@ export const likePost = (req, res, next) => __awaiter(void 0, void 0, void 0, fu
                         email: currentUser === null || currentUser === void 0 ? void 0 : currentUser.email,
                         profilePicture: currentUser === null || currentUser === void 0 ? void 0 : currentUser.profilePicture,
                         _id: currentUser === null || currentUser === void 0 ? void 0 : currentUser._id
-                    }, likes: updatedPost.likes.map(like => ({
-                        username: currentUser === null || currentUser === void 0 ? void 0 : currentUser.username,
-                        email: currentUser === null || currentUser === void 0 ? void 0 : currentUser.email,
-                        profilePicture: currentUser === null || currentUser === void 0 ? void 0 : currentUser.profilePicture,
-                        _id: currentUser === null || currentUser === void 0 ? void 0 : currentUser._id
-                    })) })
+                    }, likes: postLikes })
             });
         }
     }

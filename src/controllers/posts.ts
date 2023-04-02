@@ -192,11 +192,11 @@ export const likePost = async (req: Request, res: Response, next: NextFunction) 
     let updatedPost: (Document<unknown, {}, PostType> & Omit<PostType & Required<{
       _id: Types.ObjectId;
     }>, never>) | null
+    let postLikes: any[]
     if (req.userId) {
       const currentUser = await Users.findById(req.userId)
       if (!post.likes.includes(new Types.ObjectId(req.userId))) {
         updatedLikes = post.likes.concat(new Types.ObjectId(req.userId))
-        //await post.updateOne({ $push: { likes: new Types.ObjectId(req.userId) } })
         updatedPost = await Posts.findOneAndUpdate({ _id: req.params.id }, { likes: updatedLikes }, {
           new: true
         })
@@ -222,17 +222,43 @@ export const likePost = async (req: Request, res: Response, next: NextFunction) 
             }
           })
         }
+        postLikes = await Promise.all<any[]>(
+          updatedLikes.map(async (like) => {
+            const user = await Users.findById(like)
+            return ({
+              username: user?.username,
+              email: user?.email,
+              profilePicture: user?.profilePicture,
+              _id: user?._id
+            })
+          }
+          )
+        )
 
         res.status(200).json("User liked post!")
 
+
       } else {
         updatedLikes = post.likes.filter(id => id.toString() !== req.userId)
-        //await post.updateOne({ $push: { likes: new Types.ObjectId(req.userId) } })
         updatedPost = await Posts.findOneAndUpdate({ _id: req.params.id }, { likes: updatedLikes }, {
           new: true
         })
+        postLikes = await Promise.all<any[]>(
+          updatedLikes.map(async (like) => {
+            const user = await Users.findById(like)
+            return ({
+              username: user?.username,
+              email: user?.email,
+              profilePicture: user?.profilePicture,
+              _id: user?._id
+            })
+          }
+          )
+        )
+        console.log(postLikes)
         res.status(403).json("Like removed from post")
       }
+
       getIO().emit("posts", {
         action: "like",
         post: {
@@ -243,12 +269,7 @@ export const likePost = async (req: Request, res: Response, next: NextFunction) 
             profilePicture: currentUser?.profilePicture,
             _id: currentUser?._id
           },
-          likes: updatedPost!.likes.map(like => ({
-            username: currentUser?.username,
-            email: currentUser?.email,
-            profilePicture: currentUser?.profilePicture,
-            _id: currentUser?._id
-          })),
+          likes: postLikes
         }
       })
     }
