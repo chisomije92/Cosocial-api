@@ -165,7 +165,7 @@ export const getUserPosts = async (req: Request, res: Response, next: NextFuncti
     const userPosts = await Posts.find({ userId: currentUser._id }).populate(query)
     getIO().emit("posts", {
       action: "getUserPosts",
-      userPosts: userPosts
+      posts: userPosts
     })
     res.status(200).json(userPosts)
   } catch (err: any) {
@@ -369,7 +369,10 @@ export const getPostsOnExplore = async (req: Request, res: Response, next: NextF
   try {
     const randomPosts = await Posts.aggregate([{ $sample: { size: 17 } }])
     const aggregatedPosts = await Posts.populate(randomPosts, query)
-
+    getIO().emit("posts", {
+      action: "getPostsOnExplore",
+      posts: aggregatedPosts
+    })
     res.status(200).json(aggregatedPosts)
 
   } catch (err: any) {

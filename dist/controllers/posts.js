@@ -149,7 +149,7 @@ export const getUserPosts = (req, res, next) => __awaiter(void 0, void 0, void 0
         const userPosts = yield Posts.find({ userId: currentUser._id }).populate(query);
         getIO().emit("posts", {
             action: "getUserPosts",
-            userPosts: userPosts
+            posts: userPosts
         });
         res.status(200).json(userPosts);
     }
@@ -320,6 +320,10 @@ export const getPostsOnExplore = (req, res, next) => __awaiter(void 0, void 0, v
     try {
         const randomPosts = yield Posts.aggregate([{ $sample: { size: 17 } }]);
         const aggregatedPosts = yield Posts.populate(randomPosts, query);
+        getIO().emit("posts", {
+            action: "getPostsOnExplore",
+            posts: aggregatedPosts
+        });
         res.status(200).json(aggregatedPosts);
     }
     catch (err) {
