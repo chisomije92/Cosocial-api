@@ -265,6 +265,10 @@ export const getPost = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
             const error = new CustomError("Post not found!", 404);
             throw error;
         }
+        getIO().emit("posts", {
+            action: "getPost",
+            post: Object.assign({}, post.toObject())
+        });
         res.status(200).json(post);
     }
     catch (err) {
@@ -334,8 +338,18 @@ export const getPostsOnExplore = (req, res, next) => __awaiter(void 0, void 0, v
     }
 });
 export const bookmarkPost = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const query = [
+        {
+            path: 'linkedUser',
+            select: 'username email profilePicture _id'
+        },
+        {
+            path: 'likes',
+            select: 'username email profilePicture _id'
+        }
+    ];
     try {
-        const post = yield Posts.findById(req.params.id);
+        const post = yield Posts.findById(req.params.id).populate(query);
         if (!post) {
             const error = new CustomError("Post not found!", 404);
             throw error;
@@ -345,14 +359,40 @@ export const bookmarkPost = (req, res, next) => __awaiter(void 0, void 0, void 0
             const error = new CustomError("User not found!", 404);
             throw error;
         }
+        let updatedBookmarks;
+        let updatedCurrentUser;
+        let bookmarkedPosts;
         if (!currentUser.bookmarks.includes(post.id)) {
-            yield currentUser.updateOne({ $push: { bookmarks: post.id } });
+            updatedBookmarks = [post._id,
+                ...currentUser.bookmarks];
+            updatedCurrentUser = yield Users.findOneAndUpdate({ _id: currentUser._id }, { bookmarks: updatedBookmarks }, { new: true }).populate("bookmarks");
+            bookmarkedPosts = yield Promise.all(updatedCurrentUser.bookmarks.map((v) => __awaiter(void 0, void 0, void 0, function* () {
+                const post = yield Posts.findById(v).populate(query);
+                return post;
+            })));
+            //console.log({
+            //  ...updatedCurrentUser?.toObject(),
+            //  bookmarks: bookmarkedPosts
+            //})
             res.status(200).json("Added to bookmarks");
         }
         else {
-            yield currentUser.updateOne({ $pull: { bookmarks: post.id } });
+            updatedBookmarks = currentUser.bookmarks.filter(b => b.toString() !== post._id.toString());
+            updatedCurrentUser = yield Users.findOneAndUpdate({ _id: currentUser._id }, { bookmarks: updatedBookmarks }, { new: true }).populate("bookmarks");
+            bookmarkedPosts = yield Promise.all(updatedCurrentUser.bookmarks.map((v) => __awaiter(void 0, void 0, void 0, function* () {
+                const post = yield Posts.findById(v).populate(query);
+                return post;
+            })));
             res.status(403).json("Removed from bookmarks");
         }
+        //getIO().on("connection", (socket) => {
+        //  console.log('A user has connected');
+        getIO().emit("posts", {
+            action: "bookmark",
+            user: Object.assign(Object.assign({}, updatedCurrentUser === null || updatedCurrentUser === void 0 ? void 0 : updatedCurrentUser.toObject()), { bookmarks: bookmarkedPosts })
+        });
+        //})
+        //.to(currentUser.id)
     }
     catch (err) {
         if (!err.statusCode) {
@@ -362,13 +402,31 @@ export const bookmarkPost = (req, res, next) => __awaiter(void 0, void 0, void 0
     }
 });
 export const getAllBookmarks = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const query = [
+        {
+            path: 'linkedUser',
+            select: 'username email profilePicture _id'
+        },
+        {
+            path: 'likes',
+            select: 'username email profilePicture _id'
+        }
+    ];
     try {
         const user = yield Users.findById(req.userId).populate("bookmarks");
         if (!user) {
             const error = new CustomError("User not found!", 404);
             throw error;
         }
-        res.status(200).json(user["bookmarks"]);
+        const bookmarkedPosts = yield Promise.all(user.bookmarks.map((v) => __awaiter(void 0, void 0, void 0, function* () {
+            const post = yield Posts.findById(v).populate(query);
+            return post;
+        })));
+        getIO().emit("posts", {
+            action: "getBookmarks",
+            posts: bookmarkedPosts
+        });
+        res.status(200).json(bookmarkedPosts);
     }
     catch (err) {
         if (!err.statusCode) {
