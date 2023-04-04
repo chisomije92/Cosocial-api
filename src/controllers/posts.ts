@@ -163,6 +163,10 @@ export const getUserPosts = async (req: Request, res: Response, next: NextFuncti
       throw error;
     }
     const userPosts = await Posts.find({ userId: currentUser._id }).populate(query)
+    getIO().emit("posts", {
+      action: "getUserPosts",
+      userPosts: userPosts
+    })
     res.status(200).json(userPosts)
   } catch (err: any) {
     if (!err.statusCode) {
@@ -333,6 +337,11 @@ export const getPostsOnTL = async (req: Request, res: Response, next: NextFuncti
     const friendPosts = await Promise.all<any[]>(
       currentUser.following.map(friendId => { return Posts.find({ userId: friendId }).populate(query) })
     )
+
+    getIO().emit("posts", {
+      action: "getPostsOnTL",
+      posts: userPosts.concat(...friendPosts)
+    })
 
     res.status(200).json(userPosts.concat(...friendPosts))
 

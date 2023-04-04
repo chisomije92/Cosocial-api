@@ -147,6 +147,10 @@ export const getUserPosts = (req, res, next) => __awaiter(void 0, void 0, void 0
             throw error;
         }
         const userPosts = yield Posts.find({ userId: currentUser._id }).populate(query);
+        getIO().emit("posts", {
+            action: "getUserPosts",
+            userPosts: userPosts
+        });
         res.status(200).json(userPosts);
     }
     catch (err) {
@@ -289,6 +293,10 @@ export const getPostsOnTL = (req, res, next) => __awaiter(void 0, void 0, void 0
         ];
         const userPosts = yield Posts.find({ userId: currentUser._id }).populate(query);
         const friendPosts = yield Promise.all(currentUser.following.map(friendId => { return Posts.find({ userId: friendId }).populate(query); }));
+        getIO().emit("posts", {
+            action: "getPostsOnTL",
+            posts: userPosts.concat(...friendPosts)
+        });
         res.status(200).json(userPosts.concat(...friendPosts));
     }
     catch (err) {
