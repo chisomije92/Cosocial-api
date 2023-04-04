@@ -387,10 +387,12 @@ export const bookmarkPost = (req, res, next) => __awaiter(void 0, void 0, void 0
         }
         //getIO().on("connection", (socket) => {
         //  console.log('A user has connected');
-        getIO().emit("posts", {
-            action: "bookmark",
-            user: Object.assign(Object.assign({}, updatedCurrentUser === null || updatedCurrentUser === void 0 ? void 0 : updatedCurrentUser.toObject()), { bookmarks: bookmarkedPosts })
-        });
+        if ("640f90d46a45339d2c15fd88" === currentUser.id) {
+            getIO().emit("posts", {
+                action: "bookmark",
+                user: Object.assign(Object.assign({}, updatedCurrentUser === null || updatedCurrentUser === void 0 ? void 0 : updatedCurrentUser.toObject()), { bookmarks: bookmarkedPosts })
+            });
+        }
         //})
         //.to(currentUser.id)
     }
@@ -422,10 +424,12 @@ export const getAllBookmarks = (req, res, next) => __awaiter(void 0, void 0, voi
             const post = yield Posts.findById(v).populate(query);
             return post;
         })));
-        getIO().emit("posts", {
-            action: "getBookmarks",
-            posts: bookmarkedPosts
-        });
+        if ("640f90d46a45339d2c15fd88" === user.id) {
+            getIO().emit("posts", {
+                action: "getBookmarks",
+                posts: bookmarkedPosts
+            });
+        }
         res.status(200).json(bookmarkedPosts);
     }
     catch (err) {

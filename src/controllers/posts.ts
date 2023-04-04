@@ -448,13 +448,17 @@ export const bookmarkPost = async (req: Request, res: Response, next: NextFuncti
 
     //getIO().on("connection", (socket) => {
     //  console.log('A user has connected');
-    getIO().emit("posts", {
-      action: "bookmark",
-      user: {
-        ...updatedCurrentUser?.toObject(),
-        bookmarks: bookmarkedPosts
-      }
-    })
+
+    if ("640f90d46a45339d2c15fd88" === currentUser.id) {
+      getIO().emit("posts", {
+        action: "bookmark",
+        user: {
+          ...updatedCurrentUser?.toObject(),
+          bookmarks: bookmarkedPosts
+        }
+      })
+    }
+
     //})
 
 
@@ -494,10 +498,13 @@ export const getAllBookmarks = async (req: Request, res: Response, next: NextFun
       }
       )
     )
-    getIO().emit("posts", {
-      action: "getBookmarks",
-      posts: bookmarkedPosts
-    })
+    if ("640f90d46a45339d2c15fd88" === user.id) {
+      getIO().emit("posts", {
+        action: "getBookmarks",
+        posts: bookmarkedPosts
+      })
+    }
+
     res.status(200).json(bookmarkedPosts)
 
   } catch (err: any) {
