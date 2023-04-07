@@ -69,12 +69,6 @@ if (MONGO_URL) {
         httpServer.listen(8000);
         io.on("connection", (socket) => {
             console.log("New client connected");
-            //console.log(`Client socket ID: ${socket.id}`);
-            socket.on('sendClientId', (clientId) => {
-                // Store the custom client ID and its corresponding socket in the Map
-                //clients.set(clientId, socket);
-                console.log(clientId);
-            });
         });
     });
 }

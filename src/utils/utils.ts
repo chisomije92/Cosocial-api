@@ -13,3 +13,4 @@ export const clearImage = (imagePath: string, dirname: string) => {
       throw err
   });
 };
+

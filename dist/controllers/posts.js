@@ -424,12 +424,6 @@ export const getAllBookmarks = (req, res, next) => __awaiter(void 0, void 0, voi
             const post = yield Posts.findById(v).populate(query);
             return post;
         })));
-        if ("640f90d46a45339d2c15fd88" === user.id) {
-            getIO().emit("posts", {
-                action: "getBookmarks",
-                posts: bookmarkedPosts
-            });
-        }
         res.status(200).json(bookmarkedPosts);
     }
     catch (err) {

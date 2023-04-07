@@ -7,8 +7,9 @@ import { Request, Response, NextFunction } from "express";
 import Users, { UserType } from "../models/user.js";
 import { clearImage } from '../utils/utils.js';
 import { Document, Types } from 'mongoose';
-import { getIO } from "../socket/index.js";
+import { clientIdMap, getIO } from "../socket/index.js";
 import posts from '../models/posts.js';
+import { Socket } from "socket.io";
 
 
 
@@ -498,12 +499,6 @@ export const getAllBookmarks = async (req: Request, res: Response, next: NextFun
       }
       )
     )
-    if ("640f90d46a45339d2c15fd88" === user.id) {
-      getIO().emit("posts", {
-        action: "getBookmarks",
-        posts: bookmarkedPosts
-      })
-    }
 
     res.status(200).json(bookmarkedPosts)
 
