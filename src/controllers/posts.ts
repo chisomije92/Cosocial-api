@@ -7,7 +7,7 @@ import { Request, Response, NextFunction } from "express";
 import Users, { UserType } from "../models/user.js";
 import { clearImage } from '../utils/utils.js';
 import { Document, Types } from 'mongoose';
-import { clientIdMap, getIO } from "../socket/index.js";
+import { getIO } from "../socket/index.js";
 import posts from '../models/posts.js';
 import { Socket } from "socket.io";
 
@@ -428,11 +428,6 @@ export const bookmarkPost = async (req: Request, res: Response, next: NextFuncti
           return post
         }
         ))
-
-      //console.log({
-      //  ...updatedCurrentUser?.toObject(),
-      //  bookmarks: bookmarkedPosts
-      //})
       res.status(200).json("Added to bookmarks")
     } else {
       updatedBookmarks = currentUser.bookmarks.filter(b => b.toString() !== post._id.toString())
@@ -446,26 +441,13 @@ export const bookmarkPost = async (req: Request, res: Response, next: NextFuncti
       )
       res.status(403).json("Removed from bookmarks")
     }
-
-    //getIO().on("connection", (socket) => {
-    //  console.log('A user has connected');
-
-    if ("640f90d46a45339d2c15fd88" === currentUser.id) {
-      getIO().emit("posts", {
-        action: "bookmark",
-        user: {
-          ...updatedCurrentUser?.toObject(),
-          bookmarks: bookmarkedPosts
-        }
-      })
-    }
-
-    //})
-
-
-    //.to(currentUser.id)
-
-
+    getIO().emit("posts", {
+      action: "bookmark",
+      user: {
+        ...updatedCurrentUser?.toObject(),
+        bookmarks: bookmarkedPosts
+      }
+    })
   }
   catch (err: any) {
     if (!err.statusCode) {

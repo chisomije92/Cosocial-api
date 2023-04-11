@@ -370,10 +370,6 @@ export const bookmarkPost = (req, res, next) => __awaiter(void 0, void 0, void 0
                 const post = yield Posts.findById(v).populate(query);
                 return post;
             })));
-            //console.log({
-            //  ...updatedCurrentUser?.toObject(),
-            //  bookmarks: bookmarkedPosts
-            //})
             res.status(200).json("Added to bookmarks");
         }
         else {
@@ -385,16 +381,10 @@ export const bookmarkPost = (req, res, next) => __awaiter(void 0, void 0, void 0
             })));
             res.status(403).json("Removed from bookmarks");
         }
-        //getIO().on("connection", (socket) => {
-        //  console.log('A user has connected');
-        if ("640f90d46a45339d2c15fd88" === currentUser.id) {
-            getIO().emit("posts", {
-                action: "bookmark",
-                user: Object.assign(Object.assign({}, updatedCurrentUser === null || updatedCurrentUser === void 0 ? void 0 : updatedCurrentUser.toObject()), { bookmarks: bookmarkedPosts })
-            });
-        }
-        //})
-        //.to(currentUser.id)
+        getIO().emit("posts", {
+            action: "bookmark",
+            user: Object.assign(Object.assign({}, updatedCurrentUser === null || updatedCurrentUser === void 0 ? void 0 : updatedCurrentUser.toObject()), { bookmarks: bookmarkedPosts })
+        });
     }
     catch (err) {
         if (!err.statusCode) {
