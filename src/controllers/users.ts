@@ -554,9 +554,6 @@ export const singleNotificationRead = async (
     } else {
       throw new CustomError("Notification not found", 404)
     }
-
-
-
     res.status(200).json("Notification marked as read");
   } catch (err: any) {
     if (!err.statusCode) {
@@ -565,3 +562,50 @@ export const singleNotificationRead = async (
     next(err);
   }
 }
+
+
+export const deleteSingleNotification = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const user = await User.findById(req.userId)
+    if (!user) {
+      const error = new CustomError("User does not exist", 403);
+      throw error;
+    }
+
+    const filteredNotifications = user.notifications.filter((n) => n._id?.toString() !== req.params.id)
+    user.notifications = filteredNotifications
+    await user.save()
+    res.status(200).json(filteredNotifications);
+  } catch (err: any) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+};
+
+export const deleteAllNotifications = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const user = await User.findById(req.userId)
+    if (!user) {
+      const error = new CustomError("User does not exist", 403);
+      throw error;
+    }
+    user.notifications = []
+    await user.save()
+    res.status(200).json("Notifications are now deleted");
+  } catch (err: any) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+};

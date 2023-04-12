@@ -464,4 +464,41 @@ export const singleNotificationRead = (req, res, next) => __awaiter(void 0, void
         next(err);
     }
 });
+export const deleteSingleNotification = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const user = yield User.findById(req.userId);
+        if (!user) {
+            const error = new CustomError("User does not exist", 403);
+            throw error;
+        }
+        const filteredNotifications = user.notifications.filter((n) => { var _a; return ((_a = n._id) === null || _a === void 0 ? void 0 : _a.toString()) !== req.params.id; });
+        user.notifications = filteredNotifications;
+        yield user.save();
+        res.status(200).json(filteredNotifications);
+    }
+    catch (err) {
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
+    }
+});
+export const deleteAllNotifications = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const user = yield User.findById(req.userId);
+        if (!user) {
+            const error = new CustomError("User does not exist", 403);
+            throw error;
+        }
+        user.notifications = [];
+        yield user.save();
+        res.status(200).json("Notifications are now deleted");
+    }
+    catch (err) {
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
+    }
+});
 //# sourceMappingURL=users.js.map
