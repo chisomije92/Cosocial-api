@@ -12,16 +12,13 @@ import { resolve } from "path";
 const __dirname = resolve();
 
 
-
-
 export const updateUser = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  const { isAdmin } = req.body;
+  const { isAdmin, description, username, email } = req.body;
   const image = req.file?.path;
-
   let imageUrl = image
   if (req.file) {
     imageUrl = req.file.path.replace("\\", "/");
@@ -41,21 +38,47 @@ export const updateUser = async (
 
   if (req.userId === req.params.id || isAdmin) {
     try {
-      const user = await User.findById(req.userId);
+      const user = await User.findById(req.userId).populate({
+        path: 'bookmarks',
+        populate: [{
+          path: 'linkedUser',
+          model: 'Users',
+          select: "email username profilePicture _id"
+        }, {
+          path: 'likes',
+          model: 'Users',
+          select: 'email username profilePicture _id'
+        }]
+      });
       if (!user) {
         throw new CustomError("User does not finish", 404);
       }
       if (imageUrl && imageUrl !== user.profilePicture && user.profilePicture.length > 0) {
         clearImage(user.profilePicture, __dirname);
+        user.profilePicture = imageUrl
+      }
+      if (description) {
+        user.description = description
       }
 
-      await User.findByIdAndUpdate(req.userId, {
-        $set: {
-          ...req.body,
-          profilePicture: imageUrl,
-        },
-      });
-      res.status(200).json("Account updated");
+      if (username) {
+        user.username = username
+      }
+
+      if (email) {
+        user.email = email
+      }
+      const updatedUser = (await user.save()).toObject()
+
+      const { password, isAdmin, __v, ...rest } = updatedUser
+      //await User.findByIdAndUpdate(req.userId, {
+      //  $set: {
+      //    ...req.body,
+      //    profilePicture: imageUrl,
+      //  },
+      //});
+
+      res.status(200).json(rest);
     } catch (err: any) {
       if (!err.statusCode) {
         err.statusCode = 500;

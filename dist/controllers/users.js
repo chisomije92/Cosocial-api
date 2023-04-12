@@ -28,7 +28,7 @@ import { resolve } from "path";
 const __dirname = resolve();
 export const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
-    const { isAdmin } = req.body;
+    const { isAdmin, description, username, email } = req.body;
     const image = (_a = req.file) === null || _a === void 0 ? void 0 : _a.path;
     let imageUrl = image;
     if (req.file) {
@@ -43,17 +43,50 @@ export const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, 
     }
     if (req.userId === req.params.id || isAdmin) {
         try {
-            const user = yield User.findById(req.userId);
+            const user = yield User.findById(req.userId).populate({
+                path: 'bookmarks',
+                populate: [{
+                        path: 'linkedUser',
+                        model: 'Users',
+                        select: "email username profilePicture _id"
+                    }, {
+                        path: 'likes',
+                        model: 'Users',
+                        select: 'email username profilePicture _id'
+                    }]
+            });
             if (!user) {
                 throw new CustomError("User does not finish", 404);
             }
             if (imageUrl && imageUrl !== user.profilePicture && user.profilePicture.length > 0) {
                 clearImage(user.profilePicture, __dirname);
+                user.profilePicture = imageUrl;
             }
-            yield User.findByIdAndUpdate(req.userId, {
-                $set: Object.assign(Object.assign({}, req.body), { profilePicture: imageUrl }),
-            });
-            res.status(200).json("Account updated");
+            if (description) {
+                user.description = description;
+            }
+            if (username) {
+                user.username = username;
+            }
+            if (email) {
+                user.email = email;
+            }
+            const updatedUser = (yield user.save()).toObject();
+            const { password, isAdmin, __v } = updatedUser, rest = __rest(updatedUser
+            //await User.findByIdAndUpdate(req.userId, {
+            //  $set: {
+            //    ...req.body,
+            //    profilePicture: imageUrl,
+            //  },
+            //});
+            , ["password", "isAdmin", "__v"]);
+            //await User.findByIdAndUpdate(req.userId, {
+            //  $set: {
+            //    ...req.body,
+            //    profilePicture: imageUrl,
+            //  },
+            //});
+            res.status(200).json(rest);
         }
         catch (err) {
             if (!err.statusCode) {

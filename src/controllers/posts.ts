@@ -1,5 +1,5 @@
 
-import { join, resolve } from 'path';
+import { resolve } from 'path';
 
 import { CustomError } from './../error-model/custom-error.js';
 import Posts, { PostType } from "../models/posts.js";
@@ -8,8 +8,7 @@ import Users, { UserType } from "../models/user.js";
 import { clearImage } from '../utils/utils.js';
 import { Document, Types } from 'mongoose';
 import { getIO } from "../socket/index.js";
-import posts from '../models/posts.js';
-import { Socket } from "socket.io";
+
 
 
 
