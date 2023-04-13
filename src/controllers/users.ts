@@ -71,13 +71,6 @@ export const updateUser = async (
       const updatedUser = (await user.save()).toObject()
 
       const { password, isAdmin, __v, ...rest } = updatedUser
-      //await User.findByIdAndUpdate(req.userId, {
-      //  $set: {
-      //    ...req.body,
-      //    profilePicture: imageUrl,
-      //  },
-      //});
-
       res.status(200).json(rest);
     } catch (err: any) {
       if (!err.statusCode) {

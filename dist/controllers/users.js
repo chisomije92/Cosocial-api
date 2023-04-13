@@ -72,20 +72,7 @@ export const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, 
                 user.email = email;
             }
             const updatedUser = (yield user.save()).toObject();
-            const { password, isAdmin, __v } = updatedUser, rest = __rest(updatedUser
-            //await User.findByIdAndUpdate(req.userId, {
-            //  $set: {
-            //    ...req.body,
-            //    profilePicture: imageUrl,
-            //  },
-            //});
-            , ["password", "isAdmin", "__v"]);
-            //await User.findByIdAndUpdate(req.userId, {
-            //  $set: {
-            //    ...req.body,
-            //    profilePicture: imageUrl,
-            //  },
-            //});
+            const { password, isAdmin, __v } = updatedUser, rest = __rest(updatedUser, ["password", "isAdmin", "__v"]);
             res.status(200).json(rest);
         }
         catch (err) {
