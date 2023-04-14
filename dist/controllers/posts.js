@@ -489,15 +489,31 @@ export const likeComment = (req, res, next) => __awaiter(void 0, void 0, void 0,
             throw new CustomError("Reply not found", 404);
         }
         const indexOfReply = post.comments.findIndex(p => { var _a; return ((_a = p._id) === null || _a === void 0 ? void 0 : _a.toString()) === req.body.replyId; });
+        let likesInReply;
+        let updatedComments;
+        let updatedPost;
+        let mappedLikes;
         if (!(reply === null || reply === void 0 ? void 0 : reply.likes.includes(new Types.ObjectId(req.userId)))) {
-            const likesInReply = reply.likes.concat(new Types.ObjectId(req.userId));
+            likesInReply = reply.likes.concat(new Types.ObjectId(req.userId));
             post.comments[indexOfReply].likes = likesInReply;
-            const updatedComments = [...post.comments];
+            updatedComments = [...post.comments];
+            mappedLikes = yield Promise.all(likesInReply.map((like) => __awaiter(void 0, void 0, void 0, function* () {
+                const user = yield Users.findById(like);
+                return ({
+                    username: user === null || user === void 0 ? void 0 : user.username,
+                    email: user === null || user === void 0 ? void 0 : user.email,
+                    profilePicture: user === null || user === void 0 ? void 0 : user.profilePicture,
+                    _id: user === null || user === void 0 ? void 0 : user._id
+                });
+            })));
             yield post.updateOne({
                 $set: {
                     comments: updatedComments
                 }
             });
+            //updatedPost = await Posts.findOneAndUpdate({ _id: req.params.id }, { comments: updatedComments }, {
+            //  new: true
+            //})
             const targetUser = yield Users.findById(reply.commenter.userId);
             if ((targetUser === null || targetUser === void 0 ? void 0 : targetUser.id) !== req.userId && targetUser) {
                 yield targetUser.updateOne({
@@ -520,16 +536,41 @@ export const likeComment = (req, res, next) => __awaiter(void 0, void 0, void 0,
             res.status(200).json("User liked comment!");
         }
         else {
-            const likesInReply = reply.likes.filter(id => id !== new Types.ObjectId(req.userId));
+            likesInReply = reply.likes.filter(id => id !== new Types.ObjectId(req.userId));
             post.comments[indexOfReply].likes = likesInReply;
-            const updatedComments = [...post.comments];
+            updatedComments = [...post.comments];
+            mappedLikes = yield Promise.all(likesInReply.map((like) => __awaiter(void 0, void 0, void 0, function* () {
+                const user = yield Users.findById(like);
+                return ({
+                    username: user === null || user === void 0 ? void 0 : user.username,
+                    email: user === null || user === void 0 ? void 0 : user.email,
+                    profilePicture: user === null || user === void 0 ? void 0 : user.profilePicture,
+                    _id: user === null || user === void 0 ? void 0 : user._id
+                });
+            })));
             yield post.updateOne({
                 $set: {
                     comments: updatedComments
                 }
             });
+            //updatedPost = await Posts.findOneAndUpdate({ _id: req.params.id }, { comments: updatedComments }, {
+            //  new: true
+            //})
             res.status(403).json("Like removed from comment");
         }
+        //getIO().emit("posts", {
+        //  action: "likeReply",
+        //  comment: {
+        //    ...updatedComments,
+        //    linkedUser: {
+        //      username: currentUser?.username,
+        //      email: currentUser?.email,
+        //      profilePicture: currentUser?.profilePicture,
+        //      _id: currentUser?._id
+        //    },
+        //    likes: mappedLikes
+        //  }
+        //})
     }
     catch (err) {
         if (!err.statusCode) {

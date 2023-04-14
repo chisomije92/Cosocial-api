@@ -5,7 +5,7 @@ import mongoose, { Types } from "mongoose";
 
 const { Schema, model } = mongoose;
 
-interface Reply {
+export interface Reply {
   _id?: Types.ObjectId;
   comment: string;
   commenter: {

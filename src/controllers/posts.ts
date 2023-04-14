@@ -2,7 +2,7 @@
 import { resolve } from 'path';
 
 import { CustomError } from './../error-model/custom-error.js';
-import Posts, { PostType } from "../models/posts.js";
+import Posts, { PostType, Reply } from "../models/posts.js";
 import { Request, Response, NextFunction } from "express";
 import Users, { UserType } from "../models/user.js";
 import { clearImage } from '../utils/utils.js';
@@ -561,16 +561,37 @@ export const likeComment = async (req: Request, res: Response, next: NextFunctio
     }
     const indexOfReply = post.comments.findIndex(p => p._id?.toString() === req.body.replyId)
 
+    let likesInReply: Types.ObjectId[]
+    let updatedComments: Reply[]
+    let updatedPost: (Document<unknown, {}, PostType> & Omit<PostType & Required<{
+      _id: Types.ObjectId;
+    }>, never>) | null
+    let mappedLikes: any[]
 
     if (!reply?.likes.includes(new Types.ObjectId(req.userId))) {
-      const likesInReply = reply.likes.concat(new Types.ObjectId(req.userId))
+      likesInReply = reply.likes.concat(new Types.ObjectId(req.userId))
       post.comments[indexOfReply].likes = likesInReply
-      const updatedComments = [...post.comments]
+      updatedComments = [...post.comments]
+      mappedLikes = await Promise.all<any[]>(
+        likesInReply.map(async (like) => {
+          const user = await Users.findById(like)
+          return ({
+            username: user?.username,
+            email: user?.email,
+            profilePicture: user?.profilePicture,
+            _id: user?._id
+          })
+        }
+        )
+      )
       await post.updateOne({
         $set: {
           comments: updatedComments
         }
       })
+      //updatedPost = await Posts.findOneAndUpdate({ _id: req.params.id }, { comments: updatedComments }, {
+      //  new: true
+      //})
 
 
       const targetUser = await Users.findById(reply.commenter.userId)
@@ -595,17 +616,44 @@ export const likeComment = async (req: Request, res: Response, next: NextFunctio
       res.status(200).json("User liked comment!")
     }
     else {
-      const likesInReply = reply.likes.filter(id => id !== new Types.ObjectId(req.userId!))
+      likesInReply = reply.likes.filter(id => id !== new Types.ObjectId(req.userId!))
       post.comments[indexOfReply].likes = likesInReply
-      const updatedComments = [...post.comments]
-
+      updatedComments = [...post.comments]
+      mappedLikes = await Promise.all<any[]>(
+        likesInReply.map(async (like) => {
+          const user = await Users.findById(like)
+          return ({
+            username: user?.username,
+            email: user?.email,
+            profilePicture: user?.profilePicture,
+            _id: user?._id
+          })
+        }
+        )
+      )
       await post.updateOne({
         $set: {
           comments: updatedComments
         }
       })
+      //updatedPost = await Posts.findOneAndUpdate({ _id: req.params.id }, { comments: updatedComments }, {
+      //  new: true
+      //})
       res.status(403).json("Like removed from comment")
     }
+    //getIO().emit("posts", {
+    //  action: "likeReply",
+    //  comment: {
+    //    ...updatedComments,
+    //    linkedUser: {
+    //      username: currentUser?.username,
+    //      email: currentUser?.email,
+    //      profilePicture: currentUser?.profilePicture,
+    //      _id: currentUser?._id
+    //    },
+    //    likes: mappedLikes
+    //  }
+    //})
   } catch (err: any) {
     if (!err.statusCode) {
       err.statusCode = 500;
