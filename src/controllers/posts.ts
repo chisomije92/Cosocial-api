@@ -295,6 +295,14 @@ export const getPost = async (req: Request, res: Response, next: NextFunction) =
     {
       path: 'likes',
       select: 'username email profilePicture _id'
+    },
+    {
+      path: "comments",
+      populate: [{
+        path: "likes",
+        select: 'username email profilePicture _id'
+      }]
+
     }
   ];
   try {
@@ -563,9 +571,6 @@ export const likeComment = async (req: Request, res: Response, next: NextFunctio
 
     let likesInReply: Types.ObjectId[]
     let updatedComments: Reply[]
-    let updatedPost: (Document<unknown, {}, PostType> & Omit<PostType & Required<{
-      _id: Types.ObjectId;
-    }>, never>) | null
     let mappedLikes: any[]
 
     if (!reply?.likes.includes(new Types.ObjectId(req.userId))) {
@@ -589,9 +594,7 @@ export const likeComment = async (req: Request, res: Response, next: NextFunctio
           comments: updatedComments
         }
       })
-      //updatedPost = await Posts.findOneAndUpdate({ _id: req.params.id }, { comments: updatedComments }, {
-      //  new: true
-      //})
+
 
 
       const targetUser = await Users.findById(reply.commenter.userId)
@@ -616,7 +619,7 @@ export const likeComment = async (req: Request, res: Response, next: NextFunctio
       res.status(200).json("User liked comment!")
     }
     else {
-      likesInReply = reply.likes.filter(id => id !== new Types.ObjectId(req.userId!))
+      likesInReply = reply.likes.filter(id => id.toString() !== req.userId)
       post.comments[indexOfReply].likes = likesInReply
       updatedComments = [...post.comments]
       mappedLikes = await Promise.all<any[]>(
@@ -636,24 +639,18 @@ export const likeComment = async (req: Request, res: Response, next: NextFunctio
           comments: updatedComments
         }
       })
-      //updatedPost = await Posts.findOneAndUpdate({ _id: req.params.id }, { comments: updatedComments }, {
-      //  new: true
-      //})
       res.status(403).json("Like removed from comment")
     }
-    //getIO().emit("posts", {
-    //  action: "likeReply",
-    //  comment: {
-    //    ...updatedComments,
-    //    linkedUser: {
-    //      username: currentUser?.username,
-    //      email: currentUser?.email,
-    //      profilePicture: currentUser?.profilePicture,
-    //      _id: currentUser?._id
-    //    },
-    //    likes: mappedLikes
-    //  }
-    //})
+    getIO().emit("posts", {
+      action: "likeReply",
+      reply: {
+        _id: reply._id,
+        comment: reply.comment,
+        commenter: { ...reply.commenter },
+        dateOfReply: reply.dateOfReply,
+        likes: mappedLikes
+      }
+    })
   } catch (err: any) {
     if (!err.statusCode) {
       err.statusCode = 500;

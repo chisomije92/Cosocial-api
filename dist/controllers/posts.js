@@ -257,6 +257,13 @@ export const getPost = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
         {
             path: 'likes',
             select: 'username email profilePicture _id'
+        },
+        {
+            path: "comments",
+            populate: [{
+                    path: "likes",
+                    select: 'username email profilePicture _id'
+                }]
         }
     ];
     try {
@@ -491,7 +498,6 @@ export const likeComment = (req, res, next) => __awaiter(void 0, void 0, void 0,
         const indexOfReply = post.comments.findIndex(p => { var _a; return ((_a = p._id) === null || _a === void 0 ? void 0 : _a.toString()) === req.body.replyId; });
         let likesInReply;
         let updatedComments;
-        let updatedPost;
         let mappedLikes;
         if (!(reply === null || reply === void 0 ? void 0 : reply.likes.includes(new Types.ObjectId(req.userId)))) {
             likesInReply = reply.likes.concat(new Types.ObjectId(req.userId));
@@ -511,9 +517,6 @@ export const likeComment = (req, res, next) => __awaiter(void 0, void 0, void 0,
                     comments: updatedComments
                 }
             });
-            //updatedPost = await Posts.findOneAndUpdate({ _id: req.params.id }, { comments: updatedComments }, {
-            //  new: true
-            //})
             const targetUser = yield Users.findById(reply.commenter.userId);
             if ((targetUser === null || targetUser === void 0 ? void 0 : targetUser.id) !== req.userId && targetUser) {
                 yield targetUser.updateOne({
@@ -536,7 +539,7 @@ export const likeComment = (req, res, next) => __awaiter(void 0, void 0, void 0,
             res.status(200).json("User liked comment!");
         }
         else {
-            likesInReply = reply.likes.filter(id => id !== new Types.ObjectId(req.userId));
+            likesInReply = reply.likes.filter(id => id.toString() !== req.userId);
             post.comments[indexOfReply].likes = likesInReply;
             updatedComments = [...post.comments];
             mappedLikes = yield Promise.all(likesInReply.map((like) => __awaiter(void 0, void 0, void 0, function* () {
@@ -553,24 +556,18 @@ export const likeComment = (req, res, next) => __awaiter(void 0, void 0, void 0,
                     comments: updatedComments
                 }
             });
-            //updatedPost = await Posts.findOneAndUpdate({ _id: req.params.id }, { comments: updatedComments }, {
-            //  new: true
-            //})
             res.status(403).json("Like removed from comment");
         }
-        //getIO().emit("posts", {
-        //  action: "likeReply",
-        //  comment: {
-        //    ...updatedComments,
-        //    linkedUser: {
-        //      username: currentUser?.username,
-        //      email: currentUser?.email,
-        //      profilePicture: currentUser?.profilePicture,
-        //      _id: currentUser?._id
-        //    },
-        //    likes: mappedLikes
-        //  }
-        //})
+        getIO().emit("posts", {
+            action: "likeReply",
+            reply: {
+                _id: reply._id,
+                comment: reply.comment,
+                commenter: Object.assign({}, reply.commenter),
+                dateOfReply: reply.dateOfReply,
+                likes: mappedLikes
+            }
+        });
     }
     catch (err) {
         if (!err.statusCode) {
