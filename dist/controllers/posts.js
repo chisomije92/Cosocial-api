@@ -441,7 +441,7 @@ export const createComment = (req, res, next) => __awaiter(void 0, void 0, void 
         if (!currentUser || !postUser) {
             throw new CustomError("User not found", 404);
         }
-        post.comments.unshift({
+        const newComment = {
             comment: req.body.comment,
             dateOfReply: new Date().toISOString(),
             commenter: {
@@ -451,32 +451,64 @@ export const createComment = (req, res, next) => __awaiter(void 0, void 0, void 
                 username: currentUser.username
             },
             likes: []
-        });
+        };
+        post.comments.unshift(newComment);
         const updatedComments = [...post.comments];
         const updatedPost = yield Posts.findOneAndUpdate({ _id: req.params.id }, { comments: updatedComments }, {
             new: true
         });
-        yield postUser.updateOne({
-            $push: {
-                notifications: {
-                    actions: `${currentUser.username} replied your post`,
-                    actionUser: {
-                        email: currentUser === null || currentUser === void 0 ? void 0 : currentUser.email,
-                        username: currentUser === null || currentUser === void 0 ? void 0 : currentUser.username,
-                        profilePicture: currentUser === null || currentUser === void 0 ? void 0 : currentUser.profilePicture,
-                        userId: currentUser === null || currentUser === void 0 ? void 0 : currentUser.id
-                    },
-                    actionPostId: post.id,
-                    read: false,
-                    dateOfAction: new Date().toISOString()
+        if (newComment.commenter.userId !== req.userId) {
+            yield postUser.updateOne({
+                $push: {
+                    notifications: {
+                        actions: `${currentUser.username} replied your post`,
+                        actionUser: {
+                            email: currentUser === null || currentUser === void 0 ? void 0 : currentUser.email,
+                            username: currentUser === null || currentUser === void 0 ? void 0 : currentUser.username,
+                            profilePicture: currentUser === null || currentUser === void 0 ? void 0 : currentUser.profilePicture,
+                            userId: currentUser === null || currentUser === void 0 ? void 0 : currentUser.id
+                        },
+                        actionPostId: post.id,
+                        read: false,
+                        dateOfAction: new Date().toISOString()
+                    }
                 }
-            }
-        });
+            });
+        }
         res.status(200).json("You made a comment");
         getIO().emit("posts", {
             action: "comment",
             comments: updatedPost === null || updatedPost === void 0 ? void 0 : updatedPost.comments
         });
+    }
+    catch (err) {
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
+    }
+});
+export const deleteComment = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const post = yield Posts.findById(req.params.id);
+        if (!post) {
+            throw new CustomError("Post not found", 404);
+        }
+        const user = yield Users.findById(req.userId);
+        if (!user) {
+            throw new CustomError("User not found", 404);
+        }
+        const userCommentIndex = post.comments.findIndex(c => c.commenter.userId === req.userId);
+        if (userCommentIndex >= 0) {
+            const updatedComments = post.comments.filter(v => { var _a; return ((_a = v._id) === null || _a === void 0 ? void 0 : _a.toString()) !== req.body.replyId; });
+            const updatedPost = yield Posts.findOneAndUpdate({ _id: req.params.id }, { comments: updatedComments }, {
+                new: true
+            });
+            res.status(200).json("Comment deleted!");
+        }
+        else {
+            throw new CustomError("User not authorized", 403);
+        }
     }
     catch (err) {
         if (!err.statusCode) {

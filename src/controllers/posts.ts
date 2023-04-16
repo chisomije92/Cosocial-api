@@ -512,7 +512,7 @@ export const createComment = async (req: Request, res: Response, next: NextFunct
       throw new CustomError("User not found", 404)
     }
 
-    post.comments.unshift({
+    const newComment = {
       comment: req.body.comment,
       dateOfReply: new Date().toISOString(),
       commenter: {
@@ -522,27 +522,33 @@ export const createComment = async (req: Request, res: Response, next: NextFunct
         username: currentUser.username
       },
       likes: []
-    })
+    }
+
+    post.comments.unshift(newComment)
     const updatedComments = [...post.comments]
     const updatedPost = await Posts.findOneAndUpdate({ _id: req.params.id }, { comments: updatedComments }, {
       new: true
     })
-    await postUser.updateOne({
-      $push: {
-        notifications: {
-          actions: `${currentUser.username} replied your post`,
-          actionUser: {
-            email: currentUser?.email,
-            username: currentUser?.username,
-            profilePicture: currentUser?.profilePicture,
-            userId: currentUser?.id
-          },
-          actionPostId: post.id,
-          read: false,
-          dateOfAction: new Date().toISOString()
+
+    if (newComment.commenter.userId !== req.userId) {
+      await postUser.updateOne({
+        $push: {
+          notifications: {
+            actions: `${currentUser.username} replied your post`,
+            actionUser: {
+              email: currentUser?.email,
+              username: currentUser?.username,
+              profilePicture: currentUser?.profilePicture,
+              userId: currentUser?.id
+            },
+            actionPostId: post.id,
+            read: false,
+            dateOfAction: new Date().toISOString()
+          }
         }
-      }
-    })
+      })
+    }
+
     res.status(200).json("You made a comment")
     getIO().emit("posts", {
       action: "comment",
@@ -555,6 +561,36 @@ export const createComment = async (req: Request, res: Response, next: NextFunct
     next(err)
   }
 
+}
+
+export const deleteComment = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const post = await Posts.findById(req.params.id)
+    if (!post) {
+      throw new CustomError("Post not found", 404)
+    }
+    const user = await Users.findById(req.userId)
+    if (!user) {
+      throw new CustomError("User not found", 404)
+    }
+    const userCommentIndex = post.comments.findIndex(c => c.commenter.userId === req.userId)
+    if (userCommentIndex >= 0) {
+      const updatedComments = post.comments.filter(v => v._id?.toString() !== req.body.replyId)
+      const updatedPost = await Posts.findOneAndUpdate({ _id: req.params.id }, { comments: updatedComments }, {
+        new: true
+      })
+      res.status(200).json("Comment deleted!")
+    } else {
+      throw new CustomError("User not authorized", 403)
+    }
+
+
+  } catch (err: any) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err)
+  }
 }
 
 export const likeComment = async (req: Request, res: Response, next: NextFunction) => {
