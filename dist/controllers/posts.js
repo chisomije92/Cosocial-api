@@ -441,21 +441,21 @@ export const createComment = (req, res, next) => __awaiter(void 0, void 0, void 
         if (!currentUser || !postUser) {
             throw new CustomError("User not found", 404);
         }
-        yield (post === null || post === void 0 ? void 0 : post.updateOne({
-            $push: {
-                comments: {
-                    comment: req.body.comment,
-                    dateOfReply: new Date().toISOString(),
-                    commenter: {
-                        userId: currentUser.id,
-                        email: currentUser.email,
-                        profilePicture: currentUser.profilePicture,
-                        username: currentUser.username
-                    },
-                    likes: []
-                }
-            }
-        }));
+        post.comments.unshift({
+            comment: req.body.comment,
+            dateOfReply: new Date().toISOString(),
+            commenter: {
+                userId: currentUser.id,
+                email: currentUser.email,
+                profilePicture: currentUser.profilePicture,
+                username: currentUser.username
+            },
+            likes: []
+        });
+        const updatedComments = [...post.comments];
+        const updatedPost = yield Posts.findOneAndUpdate({ _id: req.params.id }, { comments: updatedComments }, {
+            new: true
+        });
         yield postUser.updateOne({
             $push: {
                 notifications: {
@@ -473,6 +473,10 @@ export const createComment = (req, res, next) => __awaiter(void 0, void 0, void 
             }
         });
         res.status(200).json("You made a comment");
+        getIO().emit("posts", {
+            action: "comment",
+            comments: updatedPost === null || updatedPost === void 0 ? void 0 : updatedPost.comments
+        });
     }
     catch (err) {
         if (!err.statusCode) {

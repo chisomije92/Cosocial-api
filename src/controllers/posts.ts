@@ -507,24 +507,25 @@ export const createComment = async (req: Request, res: Response, next: NextFunct
     }
     const currentUser = await Users.findById(req.userId)
     const postUser = await Users.findById(post.userId)
+
     if (!currentUser || !postUser) {
       throw new CustomError("User not found", 404)
     }
-    await post?.updateOne({
-      $push: {
-        comments: {
-          comment: req.body.comment,
-          dateOfReply: new Date().toISOString(),
-          commenter: {
-            userId: currentUser.id,
-            email: currentUser.email,
-            profilePicture: currentUser.profilePicture,
-            username: currentUser.username
-          },
-          likes: []
 
-        }
-      }
+    post.comments.unshift({
+      comment: req.body.comment,
+      dateOfReply: new Date().toISOString(),
+      commenter: {
+        userId: currentUser.id,
+        email: currentUser.email,
+        profilePicture: currentUser.profilePicture,
+        username: currentUser.username
+      },
+      likes: []
+    })
+    const updatedComments = [...post.comments]
+    const updatedPost = await Posts.findOneAndUpdate({ _id: req.params.id }, { comments: updatedComments }, {
+      new: true
     })
     await postUser.updateOne({
       $push: {
@@ -543,6 +544,10 @@ export const createComment = async (req: Request, res: Response, next: NextFunct
       }
     })
     res.status(200).json("You made a comment")
+    getIO().emit("posts", {
+      action: "comment",
+      comments: updatedPost?.comments
+    })
   } catch (err: any) {
     if (!err.statusCode) {
       err.statusCode = 500;
