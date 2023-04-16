@@ -457,6 +457,7 @@ export const createComment = (req, res, next) => __awaiter(void 0, void 0, void 
         const updatedPost = yield Posts.findOneAndUpdate({ _id: req.params.id }, { comments: updatedComments }, {
             new: true
         });
+        const reply = updatedPost === null || updatedPost === void 0 ? void 0 : updatedPost.comments[0];
         if (newComment.commenter.userId !== req.userId) {
             yield postUser.updateOne({
                 $push: {
@@ -478,7 +479,7 @@ export const createComment = (req, res, next) => __awaiter(void 0, void 0, void 
         res.status(200).json("You made a comment");
         getIO().emit("posts", {
             action: "comment",
-            comments: updatedPost === null || updatedPost === void 0 ? void 0 : updatedPost.comments
+            reply: reply
         });
     }
     catch (err) {

@@ -529,7 +529,7 @@ export const createComment = async (req: Request, res: Response, next: NextFunct
     const updatedPost = await Posts.findOneAndUpdate({ _id: req.params.id }, { comments: updatedComments }, {
       new: true
     })
-
+    const reply = updatedPost?.comments[0]
     if (newComment.commenter.userId !== req.userId) {
       await postUser.updateOne({
         $push: {
@@ -552,7 +552,7 @@ export const createComment = async (req: Request, res: Response, next: NextFunct
     res.status(200).json("You made a comment")
     getIO().emit("posts", {
       action: "comment",
-      comments: updatedPost?.comments
+      reply: reply
     })
   } catch (err: any) {
     if (!err.statusCode) {
