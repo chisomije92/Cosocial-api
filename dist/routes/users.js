@@ -1,9 +1,10 @@
 import express from "express";
 import isAuth from "../middlewares/is-auth.js";
 import { body } from "express-validator";
-import { deleteUser, updateUser, getUser, followUser, unFollowUser, changePassword, getNotifications, getFollowers, getFollowing, getNotFollowing, getNonFollowers, getAuthUser, readAllNotifications, unreadAllNotifications, singleNotificationRead, deleteAllNotifications, deleteSingleNotification } from './../controllers/users.js';
+import { deleteUser, updateUser, getUser, followUser, unFollowUser, changePassword, getNotifications, getFollowers, getFollowing, getNotFollowing, getNonFollowers, getAuthUser, readAllNotifications, unreadAllNotifications, singleNotificationRead, deleteAllNotifications, deleteSingleNotification, getAllUsers } from './../controllers/users.js';
 const router = express.Router();
 router.get("/", isAuth, getAuthUser);
+router.get("/all-users", isAuth, getAllUsers);
 router.get("/notifications", isAuth, getNotifications);
 router.delete("/notifications", isAuth, deleteAllNotifications);
 router.put("/notifications/read", isAuth, readAllNotifications);

@@ -188,6 +188,30 @@ export const getUser = async (
   }
 };
 
+export const getAllUsers = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const users = await User.find()
+    const modifiedUsers = users.map(user => ({
+      _id: user._id,
+      id: user._id,
+      email: user.email,
+      profilePicture: user.profilePicture,
+      username: user.username
+
+    }))
+    res.status(200).json(modifiedUsers);
+  } catch (err: any) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+};
+
 export const getAuthUser = async (
   req: Request,
   res: Response,

@@ -165,6 +165,25 @@ export const getUser = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
         next(err);
     }
 });
+export const getAllUsers = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const users = yield User.find();
+        const modifiedUsers = users.map(user => ({
+            _id: user._id,
+            id: user._id,
+            email: user.email,
+            profilePicture: user.profilePicture,
+            username: user.username
+        }));
+        res.status(200).json(modifiedUsers);
+    }
+    catch (err) {
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
+    }
+});
 export const getAuthUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const user = yield User.findById(req.userId).populate({
