@@ -7,6 +7,8 @@ import dotenv from "dotenv"
 import userRoute from "./routes/users.js"
 import authRoute from "./routes/auth.js"
 import postRoute from "./routes/posts.js"
+import conversationRoute from "./routes/conversation.js"
+import messageRoute from "./routes/messages.js"
 import cors from 'cors';
 import { v4 as uuidv4 } from "uuid";
 import multer from "multer";
@@ -84,6 +86,9 @@ app.use("/api/users", userRoute)
 app.use("/api/auth", authRoute)
 
 app.use('/api/posts', postRoute)
+
+app.use('/api/conversations', conversationRoute)
+app.use('/api/messages', messageRoute)
 
 app.use((error: any, req: Request, res: Response, next: NextFunction) => {
   const status = error.statusCode || 500;
