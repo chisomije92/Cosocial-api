@@ -7,7 +7,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import Conversation from "../models/conversation.js";
 import Message from "../models/message.js";
 export const createMessage = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -24,10 +23,10 @@ export const createMessage = (req, res, next) => __awaiter(void 0, void 0, void 
 });
 export const getMessage = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const conversation = yield Conversation.find({
-            members: { $in: [req.params.userId] }
+        const message = yield Message.find({
+            conversationId: req.params.conversationId
         });
-        res.status(200).json(conversation);
+        res.status(200).json(message);
     }
     catch (err) {
         if (!err.statusCode) {

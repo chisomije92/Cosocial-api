@@ -1,6 +1,5 @@
 
 import { Request, Response, NextFunction } from "express";
-import Conversation from "../models/conversation.js";
 import Message from "../models/message.js";
 
 
@@ -26,11 +25,11 @@ export const getMessage = async (req: Request, res: Response, next: NextFunction
 
 
   try {
-    const conversation = await Conversation.find({
-      members: { $in: [req.params.userId] }
+    const message = await Message.find({
+      conversationId: req.params.conversationId
     })
 
-    res.status(200).json(conversation)
+    res.status(200).json(message)
   } catch (err: any) {
 
     if (!err.statusCode) {
