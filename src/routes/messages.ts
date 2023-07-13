@@ -8,7 +8,7 @@ const router = express.Router()
 
 router.post('/', isAuth, createMessage)
 
-router.get('/:conversationId', getMessage)
+router.get('/:conversationId', isAuth, getMessage)
 
 
 export default router
