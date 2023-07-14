@@ -1,13 +1,12 @@
 import express from "express"
 import isAuth from '../middlewares/is-auth.js';
-import { chatWithUser, createConversation, getChatUsers, getConversation } from "./../controllers/conversations.js";
+import { chatWithUser, getChat, getChatUsers, } from "./../controllers/conversations.js";
 
 
 const router = express.Router()
 
 
-//router.post('/', isAuth, createConversation)
-router.post('/', chatWithUser)
-router.get('/:userId', getChatUsers)
-//router.get('/:userId', isAuth, getConversation)
+router.post('/', isAuth, chatWithUser)
+router.get('/users', isAuth, getChatUsers)
+router.get('/:receiverId', isAuth, getChat)
 export default router

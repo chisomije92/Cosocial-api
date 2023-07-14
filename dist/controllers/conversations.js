@@ -10,35 +10,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import Conversation from "../models/conversation.js";
 import Users from "../models/user.js";
 import { CustomError } from "../error-model/custom-error.js";
-export const createConversation = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const newConversation = new Conversation({
-            members: [req.body.senderId, req.body.receiverId]
-        });
-        const savedConversation = yield newConversation.save();
-        res.status(200).json(savedConversation);
-    }
-    catch (err) {
-        if (!err.statusCode) {
-            err.statusCode = 500;
-        }
-        next(err);
-    }
-});
-export const getConversation = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const conversation = yield Conversation.find({
-            members: { $in: [req.params.userId] }
-        });
-        res.status(200).json(conversation);
-    }
-    catch (err) {
-        if (!err.statusCode) {
-            err.statusCode = 500;
-        }
-        next(err);
-    }
-});
 export const chatWithUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         let conversation;
@@ -81,16 +52,37 @@ export const chatWithUser = (req, res, next) => __awaiter(void 0, void 0, void 0
         next(err);
     }
 });
+export const getChat = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const currentUser = yield Users.findById(req.userId);
+    if (!currentUser) {
+        const error = new CustomError("User not found!", 404);
+        throw error;
+    }
+    try {
+        const conversation = yield Conversation.findOne({
+            members: {
+                $all: [currentUser.id, req.params.receiverId]
+            }
+        });
+        res.status(200).json(conversation);
+    }
+    catch (err) {
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
+    }
+});
 export const getChatUsers = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const currentUser = yield Users.findById(req.params.userId);
+        const currentUser = yield Users.findById(req.userId);
         if (!currentUser) {
             const error = new CustomError("User not found!", 404);
             throw error;
         }
         const foundConversations = yield Conversation.find({
             members: {
-                $in: [req.params.userId]
+                $in: [currentUser.id]
             }
         });
         if (foundConversations) {

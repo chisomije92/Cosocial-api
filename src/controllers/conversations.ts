@@ -1,48 +1,9 @@
 
 import { Request, Response, NextFunction } from "express";
 import Conversation from "../models/conversation.js";
-import Users, { UserType } from "../models/user.js";
+import Users from "../models/user.js";
 import { CustomError } from "../error-model/custom-error.js";
 
-
-export const createConversation = async (req: Request, res: Response, next: NextFunction) => {
-
-
-  try {
-    const newConversation = new Conversation({
-      members: [req.body.senderId, req.body.receiverId]
-    })
-    const savedConversation = await newConversation.save()
-
-    res.status(200).json(savedConversation)
-  } catch (err: any) {
-
-    if (!err.statusCode) {
-      err.statusCode = 500;
-    }
-    next(err)
-  }
-
-}
-
-export const getConversation = async (req: Request, res: Response, next: NextFunction) => {
-
-
-  try {
-    const conversation = await Conversation.find({
-      members: { $in: [req.params.userId] }
-    })
-
-    res.status(200).json(conversation)
-  } catch (err: any) {
-
-    if (!err.statusCode) {
-      err.statusCode = 500;
-    }
-    next(err)
-  }
-
-}
 
 
 export const chatWithUser = async (req: Request, res: Response, next: NextFunction) => {
@@ -94,19 +55,44 @@ export const chatWithUser = async (req: Request, res: Response, next: NextFuncti
 
 }
 
+export const getChat = async (req: Request, res: Response, next: NextFunction) => {
+  const currentUser = await Users.findById(req.userId)
+  if (!currentUser) {
+    const error = new CustomError("User not found!", 404);
+    throw error;
+  }
+
+  try {
+    const conversation = await Conversation.findOne({
+      members: {
+        $all: [currentUser.id, req.params.receiverId]
+      }
+    })
+
+    res.status(200).json(conversation)
+  } catch (err: any) {
+
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err)
+  }
+
+}
+
 
 export const getChatUsers = async (req: Request, res: Response, next: NextFunction) => {
 
   try {
 
-    const currentUser = await Users.findById(req.params.userId)
+    const currentUser = await Users.findById(req.userId)
     if (!currentUser) {
       const error = new CustomError("User not found!", 404);
       throw error;
     }
     const foundConversations = await Conversation.find({
       members: {
-        $in: [req.params.userId]
+        $in: [currentUser.id]
       }
     })
 
