@@ -53,7 +53,7 @@ export const chatWithUser = async (req: Request, res: Response, next: NextFuncti
 
     getIO().emit("messages", {
       action: "sendMessage",
-      messages: true
+      isSentMessage: true
     })
 
   } catch (err: any) {

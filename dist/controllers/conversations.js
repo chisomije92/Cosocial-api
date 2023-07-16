@@ -47,7 +47,7 @@ export const chatWithUser = (req, res, next) => __awaiter(void 0, void 0, void 0
         res.status(200).json(conversation.messages);
         getIO().emit("messages", {
             action: "sendMessage",
-            messages: true
+            isSentMessage: true
         });
     }
     catch (err) {
