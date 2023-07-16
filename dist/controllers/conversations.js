@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import Conversation from "../models/conversation.js";
 import Users from "../models/user.js";
 import { CustomError } from "../error-model/custom-error.js";
+import { getIO } from "../socket/index.js";
 export const chatWithUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         let conversation;
@@ -28,8 +29,8 @@ export const chatWithUser = (req, res, next) => __awaiter(void 0, void 0, void 0
                         dateOfAction: new Date().toISOString()
                     }]
             });
-            yield conversation.save();
-            console.log("not found");
+            conversation = yield conversation.save();
+            //res.status(200).json(conversation.messages)
         }
         else {
             let updatedMessages = foundConversation.messages.concat({
@@ -38,12 +39,16 @@ export const chatWithUser = (req, res, next) => __awaiter(void 0, void 0, void 0
                 text: req.body.text,
                 dateOfAction: new Date().toISOString()
             });
-            yield foundConversation.updateOne({
-                messages: updatedMessages
-            });
-            console.log("found");
+            let updatedConversation = yield Conversation.findByIdAndUpdate({
+                _id: foundConversation.id,
+            }, { messages: updatedMessages }, { new: true }).lean();
+            conversation = updatedConversation;
         }
-        res.status(200).json(conversation);
+        res.status(200).json(conversation.messages);
+        getIO().emit("messages", {
+            action: "sendMessage",
+            messages: true
+        });
     }
     catch (err) {
         if (!err.statusCode) {
@@ -88,7 +93,7 @@ export const getChatUsers = (req, res, next) => __awaiter(void 0, void 0, void 0
         if (foundConversations) {
             const chatUsersIds = foundConversations.map(v => {
                 return v.members
-                    .filter((id) => id !== req.params.userId)
+                    .filter((id) => id !== currentUser.id)
                     .reduce((v) => v);
             });
             const chats = foundConversations.map(v => {

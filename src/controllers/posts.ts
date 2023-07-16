@@ -8,6 +8,7 @@ import Users, { UserType } from "../models/user.js";
 import { clearImage } from '../utils/utils.js';
 import { Document, Types } from 'mongoose';
 import { getIO } from "../socket/index.js";
+import { usersSocketMap } from '../index.js';
 
 
 
@@ -164,7 +165,8 @@ export const getUserPosts = async (req: Request, res: Response, next: NextFuncti
       throw error;
     }
     const userPosts = await Posts.find({ userId: currentUser._id }).populate(query)
-    getIO().emit("posts", {
+    console.log(usersSocketMap.get(currentUser.id))
+    getIO().to(usersSocketMap.get(currentUser.id)).emit("posts", {
       action: "getUserPosts",
       posts: userPosts
     })
@@ -352,10 +354,12 @@ export const getPostsOnTL = async (req: Request, res: Response, next: NextFuncti
       currentUser.following.map(friendId => { return Posts.find({ userId: friendId }).populate(query) })
     )
 
-    getIO().emit("posts", {
-      action: "getPostsOnTL",
-      posts: userPosts.concat(...friendPosts)
-    })
+    getIO()
+      .to(usersSocketMap.get(currentUser.id))
+      .emit("posts", {
+        action: "getPostsOnTL",
+        posts: userPosts.concat(...friendPosts)
+      })
 
     res.status(200).json(userPosts.concat(...friendPosts))
 

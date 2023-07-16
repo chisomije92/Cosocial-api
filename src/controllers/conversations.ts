@@ -1,8 +1,10 @@
 
 import { Request, Response, NextFunction } from "express";
-import Conversation from "../models/conversation.js";
+import Conversation, { ConversationType } from "../models/conversation.js";
 import Users from "../models/user.js";
 import { CustomError } from "../error-model/custom-error.js";
+import { Document, Types } from "mongoose";
+import { getIO } from "../socket/index.js";
 
 
 
@@ -10,7 +12,9 @@ export const chatWithUser = async (req: Request, res: Response, next: NextFuncti
 
 
   try {
-    let conversation: any
+    let conversation: (Document<unknown, {}, ConversationType> & Omit<ConversationType & Required<{
+      _id: Types.ObjectId;
+    }>, never>)
     const foundConversation = await Conversation.findOne({
       members: {
         $all: [req.body.senderId, req.body.receiverId]
@@ -28,9 +32,9 @@ export const chatWithUser = async (req: Request, res: Response, next: NextFuncti
         }]
       })
 
-      await conversation.save()
+      conversation = await conversation.save()
 
-      console.log("not found")
+      //res.status(200).json(conversation.messages)
     } else {
       let updatedMessages = foundConversation.messages.concat({
         senderId: req.body.senderId,
@@ -39,12 +43,19 @@ export const chatWithUser = async (req: Request, res: Response, next: NextFuncti
         dateOfAction: new Date().toISOString()
       })
 
-      await foundConversation.updateOne({
-        messages: updatedMessages
-      })
-      console.log("found")
+      let updatedConversation = await Conversation.findByIdAndUpdate({
+        _id: foundConversation.id,
+      }, { messages: updatedMessages }, { new: true }).lean()
+      conversation = updatedConversation
+
     }
-    res.status(200).json(conversation)
+    res.status(200).json(conversation.messages)
+
+    getIO().emit("messages", {
+      action: "sendMessage",
+      messages: true
+    })
+
   } catch (err: any) {
 
     if (!err.statusCode) {
@@ -99,7 +110,7 @@ export const getChatUsers = async (req: Request, res: Response, next: NextFuncti
     if (foundConversations) {
       const chatUsersIds = foundConversations.map(v => {
         return v.members
-          .filter((id: any) => id !== req.params.userId)
+          .filter((id: any) => id !== currentUser.id)
           .reduce((v: string) => v);
       })
 

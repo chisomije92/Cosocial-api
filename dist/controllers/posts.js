@@ -14,6 +14,7 @@ import Users from "../models/user.js";
 import { clearImage } from '../utils/utils.js';
 import { Types } from 'mongoose';
 import { getIO } from "../socket/index.js";
+import { usersSocketMap } from '../index.js';
 const __dirname = resolve();
 export const createPosts = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
@@ -147,7 +148,8 @@ export const getUserPosts = (req, res, next) => __awaiter(void 0, void 0, void 0
             throw error;
         }
         const userPosts = yield Posts.find({ userId: currentUser._id }).populate(query);
-        getIO().emit("posts", {
+        console.log(usersSocketMap.get(currentUser.id));
+        getIO().to(usersSocketMap.get(currentUser.id)).emit("posts", {
             action: "getUserPosts",
             posts: userPosts
         });
@@ -304,7 +306,9 @@ export const getPostsOnTL = (req, res, next) => __awaiter(void 0, void 0, void 0
         ];
         const userPosts = yield Posts.find({ userId: currentUser._id }).populate(query);
         const friendPosts = yield Promise.all(currentUser.following.map(friendId => { return Posts.find({ userId: friendId }).populate(query); }));
-        getIO().emit("posts", {
+        getIO()
+            .to(usersSocketMap.get(currentUser.id))
+            .emit("posts", {
             action: "getPostsOnTL",
             posts: userPosts.concat(...friendPosts)
         });
