@@ -353,7 +353,6 @@ export const getPostsOnTL = async (req: Request, res: Response, next: NextFuncti
     const friendPosts = await Promise.all<any[]>(
       currentUser.following.map(friendId => { return Posts.find({ userId: friendId }).populate(query) })
     )
-
     getIO()
       .to(usersSocketMap.get(currentUser.id))
       .emit("posts", {
@@ -374,6 +373,12 @@ export const getPostsOnTL = async (req: Request, res: Response, next: NextFuncti
 }
 
 export const getPostsOnExplore = async (req: Request, res: Response, next: NextFunction) => {
+  const currentUser = await Users.findById(req.params.id)
+
+  if (!currentUser) {
+    const error = new CustomError("User not found!", 404);
+    throw error;
+  }
   const query = [
     {
       path: 'linkedUser',
@@ -387,7 +392,7 @@ export const getPostsOnExplore = async (req: Request, res: Response, next: NextF
   try {
     const randomPosts = await Posts.aggregate([{ $sample: { size: 17 } }])
     const aggregatedPosts = await Posts.populate(randomPosts, query)
-    getIO().emit("posts", {
+    getIO().to(usersSocketMap.get(currentUser.id)).emit("posts", {
       action: "getPostsOnExplore",
       posts: aggregatedPosts
     })
