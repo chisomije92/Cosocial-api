@@ -322,11 +322,11 @@ export const getPostsOnTL = (req, res, next) => __awaiter(void 0, void 0, void 0
     }
 });
 export const getPostsOnExplore = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const currentUser = yield Users.findById(req.params.id);
-    if (!currentUser) {
-        const error = new CustomError("User not found!", 404);
-        throw error;
-    }
+    //const currentUser = await Users.findById(req.params.id)
+    //if (!currentUser) {
+    //  const error = new CustomError("User not found!", 404);
+    //  throw error;
+    //}
     const query = [
         {
             path: 'linkedUser',
@@ -340,10 +340,12 @@ export const getPostsOnExplore = (req, res, next) => __awaiter(void 0, void 0, v
     try {
         const randomPosts = yield Posts.aggregate([{ $sample: { size: 17 } }]);
         const aggregatedPosts = yield Posts.populate(randomPosts, query);
-        getIO().to(usersSocketMap.get(currentUser.id)).emit("posts", {
-            action: "getPostsOnExplore",
-            posts: aggregatedPosts
-        });
+        //getIO()
+        //  //.to(usersSocketMap.get(currentUser.id))
+        //  .emit("posts", {
+        //    action: "getPostsOnExplore",
+        //    posts: aggregatedPosts
+        //  })
         res.status(200).json(aggregatedPosts);
     }
     catch (err) {

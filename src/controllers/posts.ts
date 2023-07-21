@@ -373,12 +373,12 @@ export const getPostsOnTL = async (req: Request, res: Response, next: NextFuncti
 }
 
 export const getPostsOnExplore = async (req: Request, res: Response, next: NextFunction) => {
-  const currentUser = await Users.findById(req.params.id)
+  //const currentUser = await Users.findById(req.params.id)
 
-  if (!currentUser) {
-    const error = new CustomError("User not found!", 404);
-    throw error;
-  }
+  //if (!currentUser) {
+  //  const error = new CustomError("User not found!", 404);
+  //  throw error;
+  //}
   const query = [
     {
       path: 'linkedUser',
@@ -392,10 +392,12 @@ export const getPostsOnExplore = async (req: Request, res: Response, next: NextF
   try {
     const randomPosts = await Posts.aggregate([{ $sample: { size: 17 } }])
     const aggregatedPosts = await Posts.populate(randomPosts, query)
-    getIO().to(usersSocketMap.get(currentUser.id)).emit("posts", {
-      action: "getPostsOnExplore",
-      posts: aggregatedPosts
-    })
+    //getIO()
+    //  //.to(usersSocketMap.get(currentUser.id))
+    //  .emit("posts", {
+    //    action: "getPostsOnExplore",
+    //    posts: aggregatedPosts
+    //  })
     res.status(200).json(aggregatedPosts)
 
   } catch (err: any) {
