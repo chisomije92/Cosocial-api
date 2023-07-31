@@ -264,7 +264,7 @@ N.B: All posts routes are protected
 ```
 
 
-#### bookmark post
+#### Bookmark post
 
 ```http
   PUT /api/posts/:id/bookmark
