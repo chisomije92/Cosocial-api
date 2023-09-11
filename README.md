@@ -30,7 +30,7 @@ BASE URL: https://cosocial-api.onrender.com/
 #### User sign up
 
 ```http
-  POST /api/auth/signup
+  POST /api/auth/sign-up
 ```
 
 | Parameter | Type     | Description                | Required                |
