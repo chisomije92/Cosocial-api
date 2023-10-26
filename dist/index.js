@@ -62,8 +62,6 @@ io.use((socket, next) => {
     else {
         usersSocketMap.delete(userId);
     }
-    //console.log(userId)
-    //console.log(usersSocketMap)
     next();
 });
 app.get("/", (req, res) => {
@@ -73,11 +71,6 @@ app.use("/api/users", userRoute);
 app.use("/api/auth", authRoute);
 app.use('/api/posts', postRoute);
 app.use('/api/conversations', conversationRoute);
-//io.engine.use((req: any, res, next) => {
-//  // do something
-//  console.log(req.userId)
-//  next();
-//});
 app.use((error, req, res, next) => {
     const status = error.statusCode || 500;
     const message = error.message;
@@ -97,14 +90,6 @@ if (MONGO_URL) {
             socket.on("removeUser", (data) => {
                 usersSocketMap.delete(data);
             });
-            //  io.to(data.room).emit("receiveMessage", {
-            //    receiverId: data.receiverId,
-            //    senderId: data.senderId,
-            //    text: data.text,
-            //    dateOfAction: new Date().toISOString(),
-            //    room: data.room
-            //  });
-            //})
             socket.on('disconnect', () => {
                 console.log('user disconnected');
             });
