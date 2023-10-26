@@ -83,10 +83,6 @@ io.use((socket, next) => {
   } else {
     usersSocketMap.delete(userId)
   }
-
-
-  //console.log(userId)
-  //console.log(usersSocketMap)
   next()
 })
 
@@ -103,12 +99,6 @@ app.use('/api/conversations', conversationRoute)
 
 
 
-//io.engine.use((req: any, res, next) => {
-//  // do something
-//  console.log(req.userId)
-//  next();
-//});
-
 app.use((error: any, req: Request, res: Response, next: NextFunction) => {
   const status = error.statusCode || 500;
   const message = error.message;
@@ -119,10 +109,6 @@ app.use((error: any, req: Request, res: Response, next: NextFunction) => {
 
 
 if (MONGO_URL) {
-
-
-
-
 
   mongoose.connect(MONGO_URL)
     .then(() => console.log("Connected to Mongo db")).then(() => {
@@ -141,14 +127,6 @@ if (MONGO_URL) {
         socket.on("removeUser", (data) => {
           usersSocketMap.delete(data)
         })
-        //  io.to(data.room).emit("receiveMessage", {
-        //    receiverId: data.receiverId,
-        //    senderId: data.senderId,
-        //    text: data.text,
-        //    dateOfAction: new Date().toISOString(),
-        //    room: data.room
-        //  });
-        //})
         socket.on('disconnect', () => {
           console.log('user disconnected');
 
